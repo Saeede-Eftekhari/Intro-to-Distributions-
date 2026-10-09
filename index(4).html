@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Three Distributions Explorer</title>
+<style>
+  :root{
+    --ink:#1a1f36; --ink-soft:#49527040; --soft:#4a5370; --muted:#6b7490;
+    --bg:#f4f6fb; --card:#ffffff; --line:#e3e8f3;
+    --teal:#0d9488; --teal-soft:#e6f6f4;
+    --amber:#c2680a; --amber-soft:#fdf2e3;
+    --indigo:#4f46e5; --indigo-soft:#ecebfd;
+    --accent:var(--teal); --accent-soft:var(--teal-soft);
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);line-height:1.55;
+    font-family:"Segoe UI",system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased}
+  .wrap{max-width:1060px;margin:0 auto;padding:0 18px 70px}
+  p{margin:0 0 12px}
+
+  /* header */
+  header{background:linear-gradient(135deg,#0d9488 0%,#4f46e5 55%,#7c3aed 100%);
+    color:#fff;padding:38px 18px 34px;margin-bottom:26px}
+  header .inner{max-width:1060px;margin:0 auto}
+  header h1{margin:0 0 6px;font-size:clamp(1.6rem,4vw,2.3rem);letter-spacing:-.4px}
+  header p{margin:0;opacity:.93;max-width:720px}
+  .kicker{display:inline-block;background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.35);
+    padding:3px 11px;border-radius:999px;font-size:.73rem;letter-spacing:1.3px;
+    text-transform:uppercase;font-weight:700;margin-bottom:12px}
+
+  /* cards */
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+    padding:22px 24px;margin-bottom:18px;box-shadow:0 1px 2px rgba(26,31,54,.05)}
+  .card h2{margin:0 0 10px;font-size:1.22rem;letter-spacing:-.2px}
+  .card h3{margin:20px 0 8px;font-size:1rem;color:var(--soft)}
+  .lede{font-size:1.03rem;color:var(--soft)}
+
+  /* intro */
+  .intro{border-left:5px solid var(--indigo)}
+  .chain{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr));margin:16px 0 4px}
+  .chain div{background:#f8f9fe;border:1px solid var(--line);border-radius:11px;padding:13px 15px}
+  .chain b{display:block;color:var(--indigo);font-size:.76rem;letter-spacing:1.1px;
+    text-transform:uppercase;margin-bottom:5px}
+  .chain span{font-size:.93rem;color:var(--soft)}
+  .bigpoint{margin-top:16px;background:var(--indigo-soft);border-radius:11px;padding:15px 18px;
+    font-size:1.03rem;border:1px solid #d8d4fb}
+  .bigpoint b{color:var(--indigo)}
+
+  /* tabs */
+  .tabs{display:flex;gap:9px;flex-wrap:wrap;margin:26px 0 18px}
+  .tab{flex:1 1 200px;border:2px solid var(--line);background:#fff;border-radius:12px;
+    padding:13px 15px;cursor:pointer;text-align:left;font-family:inherit;
+    font-size:.98rem;font-weight:700;color:var(--muted);transition:.15s}
+  .tab small{display:block;font-weight:500;font-size:.78rem;margin-top:2px;opacity:.85}
+  .tab:hover{border-color:#c9d2e6}
+  .tab.on{color:#fff}
+  .tab[data-k="cu"].on{background:var(--teal);border-color:var(--teal)}
+  .tab[data-k="du"].on{background:var(--amber);border-color:var(--amber)}
+  .tab[data-k="nm"].on{background:var(--indigo);border-color:var(--indigo)}
+  .panel{display:none}
+  .panel.on{display:block;animation:fade .25s ease}
+  @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+
+  /* steps */
+  .step{position:relative;padding-left:52px}
+  .step::before{content:attr(data-n);position:absolute;left:0;top:0;width:36px;height:36px;
+    border-radius:10px;background:var(--accent);color:#fff;font-weight:800;font-size:1rem;
+    display:flex;align-items:center;justify-content:center}
+  .step > h2{margin-top:5px}
+  .plain{background:var(--accent-soft);border-radius:11px;padding:15px 18px;
+    font-size:1.05rem;font-weight:600}
+  .notation{display:inline-block;background:#fff;border:1px dashed var(--accent);border-radius:8px;
+    padding:5px 12px;font-family:Consolas,monospace;font-size:.95rem;color:var(--accent);margin-top:10px}
+
+  /* function box */
+  .fnbox{border:2px solid var(--accent);border-radius:12px;padding:0;overflow:hidden;margin:6px 0 16px}
+  .fnbox .fnhead{background:var(--accent);color:#fff;padding:8px 16px;font-size:.76rem;
+    letter-spacing:1.3px;text-transform:uppercase;font-weight:800}
+  .fnbody{padding:18px 20px;display:flex;gap:26px;flex-wrap:wrap;align-items:center}
+  .fx{font-family:"Cambria Math",Cambria,Georgia,serif;font-size:1.3rem;color:var(--ink)}
+  .frac{display:inline-block;vertical-align:middle;text-align:center;margin:0 .22em}
+  .frac > span{display:block;padding:0 .35em;line-height:1.25}
+  .frac .den{border-top:1.7px solid currentColor}
+  .piece{display:inline-flex;align-items:center;gap:.35em}
+  .brace{font-size:3em;font-weight:200;line-height:.78}
+  .cases{display:grid;grid-template-columns:auto auto;gap:.35em 1.4em;align-items:center;font-size:.95rem}
+  .cases .cond{font-size:.86em;color:var(--soft);font-style:italic}
+  .fnnote{font-size:.9rem;color:var(--soft);max-width:300px}
+  .fnnote b{color:var(--accent)}
+  .ms{display:flex;gap:22px;flex-wrap:wrap;border-top:1px solid var(--line);
+    padding:12px 20px;background:#fafbff;font-family:"Cambria Math",Georgia,serif;font-size:1.02rem}
+  .ms span{color:var(--muted);font-family:"Segoe UI",sans-serif;font-size:.74rem;
+    letter-spacing:1.1px;text-transform:uppercase;font-weight:700;display:block}
+
+  /* params */
+  .params{display:flex;gap:16px;flex-wrap:wrap;align-items:flex-end;background:#f8f9fe;
+    border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin:4px 0 14px}
+  .params label,.pq label{display:block;font-size:.76rem;font-weight:700;letter-spacing:.4px;
+    text-transform:uppercase;color:var(--muted);margin-bottom:4px}
+  .params input,.pq input,.pq select{padding:8px 10px;border:2px solid var(--line);border-radius:8px;
+    font-size:1rem;font-family:inherit;font-weight:600;color:var(--ink);background:#fff}
+  .params input{width:92px}
+  .pq input{width:92px}
+  .params input:focus,.pq input:focus,.pq select:focus{outline:none;border-color:var(--accent)}
+  .params .hint{font-size:.82rem;color:var(--muted);flex:1 1 170px}
+
+  /* charts */
+  .chartbox{background:#fff;border:1px solid var(--line);border-radius:11px;padding:12px 10px 6px;margin-bottom:12px}
+  .chartbox .cap{font-size:.78rem;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
+    color:var(--muted);padding:0 8px 6px}
+  svg{display:block;width:100%;height:auto}
+  .grid2{display:grid;gap:14px;grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.grid2{grid-template-columns:1fr}}
+
+  /* expected value */
+  .ev{display:flex;gap:20px;align-items:center;flex-wrap:wrap;
+    background:linear-gradient(135deg,var(--accent-soft),#fff);
+    border:2px solid var(--accent);border-radius:12px;padding:16px 20px}
+  .ev .formula{font-size:1.05rem;color:var(--soft);font-family:"Cambria Math",Georgia,serif}
+  .ev .val{font-size:2.3rem;font-weight:800;color:var(--accent);line-height:1}
+  .lab{font-size:.74rem;letter-spacing:1.2px;text-transform:uppercase;color:var(--muted);font-weight:700}
+
+  /* pause */
+  .pause{border:2px dashed var(--accent);border-radius:12px;padding:17px 20px;background:#fffdf8}
+  .pause .q{font-size:1.06rem;font-weight:700;margin-bottom:10px}
+  .pause textarea{width:100%;min-height:62px;padding:10px 12px;border:2px solid var(--line);
+    border-radius:9px;font-family:inherit;font-size:.97rem;resize:vertical;color:var(--ink)}
+  .pause textarea:focus{outline:none;border-color:var(--accent)}
+  .reveal{margin-top:12px;background:var(--accent-soft);border-radius:10px;padding:14px 16px;display:none}
+  .reveal.on{display:block}
+  .reveal b{color:var(--accent)}
+
+  /* buttons */
+  button.btn{font-family:inherit;font-size:.95rem;font-weight:700;padding:10px 18px;border-radius:9px;
+    border:2px solid var(--accent);background:var(--accent);color:#fff;cursor:pointer;transition:.15s}
+  button.btn:hover{filter:brightness(1.08)}
+  button.btn.ghost{background:#fff;color:var(--accent)}
+  button.btn.ghost:hover{background:var(--accent-soft)}
+  button.btn.sm{padding:6px 12px;font-size:.86rem}
+  .btnrow{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:4px 0 14px}
+  .btnrow input[type=number]{width:84px;padding:9px 10px;border:2px solid var(--line);
+    border-radius:9px;font-size:1rem;font-family:inherit;font-weight:700}
+  .btnrow input:focus{outline:none;border-color:var(--accent)}
+  .btnrow label{font-size:.9rem;font-weight:600;color:var(--soft)}
+
+  /* stats */
+  .stats{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:12px}
+  .stat{background:#f8f9fe;border:1px solid var(--line);border-radius:11px;padding:13px 15px;text-align:center}
+  .stat .num{font-size:1.6rem;font-weight:800;margin-top:3px}
+  .stat.hi .num{color:var(--accent)}
+  .chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;max-height:108px;overflow:auto}
+  .chip{background:var(--accent-soft);border-radius:7px;padding:4px 9px;font-size:.86rem;
+    font-family:Consolas,monospace}
+  .empty{color:var(--muted);font-style:italic;font-size:.93rem}
+
+  /* excel */
+  .excel{background:#f0f7f1;border:1px solid #cfe5d3;border-left:5px solid #1e7a3c;
+    border-radius:11px;padding:16px 18px}
+  .excel h3{margin:0 0 9px;color:#1e7a3c;font-size:1rem}
+  code{display:inline-block;background:#fff;border:1px solid #cfe5d3;border-radius:6px;
+    padding:4px 9px;font-family:Consolas,monospace;font-size:.9rem;color:#9d1d1d}
+  .excel ol{margin:8px 0 0;padding-left:20px}
+  .excel li{margin-bottom:7px;font-size:.95rem}
+
+  /* part-2 divider */
+  .divider{display:flex;align-items:center;gap:14px;margin:34px 0 18px}
+  .divider::before,.divider::after{content:"";flex:1;height:3px;background:var(--accent);opacity:.3;border-radius:2px}
+  .divider span{background:var(--accent);color:#fff;padding:7px 20px;border-radius:999px;
+    font-weight:800;font-size:.86rem;letter-spacing:1.1px;text-transform:uppercase;text-align:center}
+
+  /* probability block */
+  .pq{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;background:#f8f9fe;
+    border:1px solid var(--line);border-radius:11px;padding:14px 16px;margin-bottom:14px}
+  .presets{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+  .answerbox{background:var(--accent-soft);border:2px solid var(--accent);border-radius:12px;
+    padding:16px 20px;margin-bottom:14px}
+  .answerbox .work{font-family:"Cambria Math",Georgia,serif;font-size:1.15rem;margin-bottom:8px}
+  .answerbox .big{font-size:2.1rem;font-weight:800;color:var(--accent);line-height:1}
+  .answerbox .exl{margin-top:10px;font-size:.92rem;color:var(--soft)}
+  .cumtable{width:100%;border-collapse:collapse;font-size:.93rem;margin-top:6px}
+  .cumtable th,.cumtable td{border:1px solid var(--line);padding:7px 10px;text-align:center}
+  .cumtable th{background:var(--accent-soft);font-size:.8rem;letter-spacing:.4px;text-transform:uppercase}
+
+  /* quiz */
+  .quiz{border:2px solid var(--accent);border-radius:12px;padding:18px 20px;background:#fff}
+  .quiz .q{font-weight:700;font-size:1.05rem;margin-bottom:12px}
+  .opt{display:block;width:100%;text-align:left;font-family:inherit;font-size:.96rem;
+    padding:11px 14px;margin-bottom:8px;border:2px solid var(--line);border-radius:9px;
+    background:#fff;cursor:pointer;color:var(--ink);transition:.12s}
+  .opt:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .opt.right{border-color:#1e7a3c;background:#eaf6ec;font-weight:700}
+  .opt.wrong{border-color:#c0392b;background:#fbecea}
+  .fb{margin-top:10px;padding:13px 15px;border-radius:9px;display:none;font-size:.96rem}
+  .fb.on{display:block}
+  .fb.good{background:#eaf6ec;border:1px solid #bcdfc3}
+  .fb.bad{background:#fbecea;border:1px solid #f0c7c1}
+
+  /* compare */
+  .compare{background:linear-gradient(135deg,#1a1f36,#2d3561);color:#fff;border:none}
+  .compare h2{color:#fff}
+  .compare p{color:#c9d0e8}
+  .cmp3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));margin-top:16px}
+  .cmp{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.17);border-radius:12px;padding:14px}
+  .cmp .t{font-weight:800;font-size:1rem;margin-bottom:2px}
+  .cmp .e{font-size:.85rem;color:#a9b4d8;margin-bottom:9px}
+  .cmp svg{background:rgba(255,255,255,.05);border-radius:8px}
+  .cmp .n{margin-top:9px;font-size:.9rem;color:#dfe4f5}
+  .punch{margin-top:18px;background:rgba(255,255,255,.12);border-radius:11px;padding:15px 18px;font-size:1.03rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="inner">
+    <span class="kicker">In-class activity</span>
+    <h1>Three Distributions Explorer</h1>
+    <p>Continuous Uniform, Discrete Uniform and Normal — the pattern, the function behind it, the expected value, a sample you generate yourself, and finally the probabilities.</p>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <!-- ============ INTRO ============ -->
+  <div class="card intro">
+    <h2>First: what is a <em>distribution</em>?</h2>
+    <p class="lede">You already know what a random variable is. A distribution is the next step.</p>
+    <div class="chain">
+      <div><b>You know this</b><span>A <strong>random variable</strong> is a number you don't know yet — next week's price, the roll of a die, this year's rainfall.</span></div>
+      <div><b>You know this too</b><span>A <strong>list</strong> of the possible values with their probabilities. Value, probability, value, probability.</span></div>
+      <div><b>New today</b><span>A <strong>named distribution</strong> replaces that list with a <strong>rule</strong> — a function. Give the rule one or two numbers and you have described the whole pattern.</span></div>
+    </div>
+    <div class="bigpoint">
+      <b>A distribution is simply the pattern behind a random variable:</b> which values tend to show up, and how often.
+      Writing that pattern as a function instead of a long list is what lets us handle prices, times and rainfall —
+      things with far too many possible values to write down one by one.
+    </div>
+    <h3>Two names for that function — and the difference matters</h3>
+    <div class="chain" style="margin-bottom:0">
+      <div><b>Discrete variable</b><span>Separate, countable values (a die shows 1…6). The function is called the <strong>probability mass function</strong>. Each value carries its own chunk of probability.</span></div>
+      <div><b>Continuous variable</b><span>Any value in a range (a price, a rainfall total). The function is called the <strong>probability density function</strong>. Probability is <strong>area under the curve</strong>, never the height itself.</span></div>
+      <div><b>Parameters</b><span>The one or two numbers that pin down which member of the family you have: <em>a</em> and <em>b</em>, or <em>μ</em> and <em>σ</em>.</span></div>
+    </div>
+  </div>
+
+  <!-- ============ TABS ============ -->
+  <div class="tabs">
+    <button class="tab on" data-k="cu">Continuous Uniform<small>Competitor's price, $6 to $10</small></button>
+    <button class="tab" data-k="du">Discrete Uniform<small>Throwing a die</small></button>
+    <button class="tab" data-k="nm">Normal<small>Price N(8, 2) · NOLA rainfall N(65, 15)</small></button>
+  </div>
+
+  <!-- ============ CONTINUOUS UNIFORM ============ -->
+  <section class="panel on" id="p-cu" style="--accent:var(--teal);--accent-soft:var(--teal-soft)">
+
+    <div class="card step" data-n="1">
+      <h2>The pattern, in plain words</h2>
+      <div class="plain">Every value in a range is equally likely — and the value can be <em>any</em> number in that range, not just whole numbers.</div>
+      <h3>Our example</h3>
+      <p>The price of a competitor's product is a random variable which is <strong>equally likely to be anywhere between $6 and $10</strong>. It could be $6.01, $7.4382, or $9.99 — anything in between is just as likely as anything else.</p>
+      <span class="notation">X ~ U(a, b)&nbsp;&nbsp;→&nbsp;&nbsp;here X ~ U(6, 10)</span>
+    </div>
+
+    <div class="card step" data-n="2">
+      <h2>The function behind the pattern</h2>
+      <div class="fnbox">
+        <div class="fnhead">Probability density function &nbsp;·&nbsp; f(x)</div>
+        <div class="fnbody">
+          <div class="fx">
+            f(x) =
+            <span class="piece"><span class="brace">{</span>
+              <span class="cases">
+                <span><span class="frac"><span>1</span><span class="den">b − a</span></span></span><span class="cond">for a ≤ x ≤ b</span>
+                <span>0</span><span class="cond">for x &lt; a or x &gt; b</span>
+              </span>
+            </span>
+          </div>
+          <div class="fnnote">
+            The height is the <b>same everywhere</b> between a and b — that is what "uniform" means.
+            Because it is a <b>density</b>, the height is not a probability. Probability comes from the
+            <b>area</b> under this flat line, which you will compute in Part 2.
+          </div>
+        </div>
+        <div class="ms">
+          <div><span>Parameters</span>a = minimum, b = maximum</div>
+          <div><span>Mean</span>(a + b) / 2</div>
+          <div><span>St. dev.</span>√( (b − a)² / 12 )</div>
+        </div>
+      </div>
+      <div class="params">
+        <div><label>a — minimum</label><input type="number" id="cu-a" value="6" step="0.5"></div>
+        <div><label>b — maximum</label><input type="number" id="cu-b" value="10" step="0.5"></div>
+        <div class="hint">Try a = 0 and b = 1. The line stays flat — only its position, width and height change. Narrower range → taller line, because the total area must always stay equal to 1.</div>
+      </div>
+      <div class="chartbox"><div class="cap">The density function f(x)</div><svg id="cu-shape" viewBox="0 0 620 210"></svg></div>
+    </div>
+
+    <div class="card step" data-n="3">
+      <h2>Expected value</h2>
+      <div class="ev">
+        <div><div class="lab">Formula</div><div class="formula">E[X] = (a + b) / 2</div></div>
+        <div><div class="lab">Here</div><div class="formula" id="cu-evwork">(6 + 10) / 2</div></div>
+        <div><div class="lab">E[X]</div><div class="val" id="cu-ev">8.00</div></div>
+      </div>
+      <p style="margin-top:12px">For a flat density the balance point sits exactly in the middle of the range.</p>
+    </div>
+
+    <div class="card step" data-n="4">
+      <h2>Stop — answer this before you generate anything</h2>
+      <div class="pause">
+        <div class="q">What does this expected value actually mean? If you simulate one price right now, will it be exactly $8?</div>
+        <textarea placeholder="Write your answer here first, then reveal..."></textarea>
+        <button class="btn ghost" style="margin-top:10px" data-reveal="cu-rev">Show the answer</button>
+        <div class="reveal" id="cu-rev">
+          <b>Almost certainly not.</b> With infinitely many possible prices between $6 and $10, the chance of landing on exactly 8.000… is essentially zero.
+          E[X] is the <b>long-run average</b>: simulate thousands of prices, average them, and you land near $8.
+          It is the balance point of the flat density — the spot where the shape would tip evenly.
+        </div>
+      </div>
+    </div>
+
+    <div class="card step" data-n="5">
+      <h2>Generate 40 random values of the price</h2>
+      <div class="btnrow">
+        <label for="cu-n">Sample size</label>
+        <input type="number" id="cu-n" value="40" min="1" max="5000">
+        <button class="btn" data-gen="cu">Generate sample</button>
+        <button class="btn ghost" data-add="cu">Add 50 more</button>
+        <button class="btn ghost" data-clear="cu">Clear</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Values drawn</div><div class="num" id="cu-cnt">0</div></div>
+        <div class="stat hi"><div class="lab">Sample average</div><div class="num" id="cu-mean">—</div></div>
+        <div class="stat"><div class="lab">Expected value</div><div class="num" id="cu-ev2">8.00</div></div>
+        <div class="stat"><div class="lab">Difference</div><div class="num" id="cu-diff">—</div></div>
+      </div>
+      <div class="chips" id="cu-chips"><span class="empty">Your values will appear here.</span></div>
+      <div class="chartbox"><div class="cap">Your sample (same scale as the density above)</div><svg id="cu-hist" viewBox="0 0 620 210"></svg></div>
+      <button class="btn ghost" data-copy="cu">Copy values for Excel</button>
+      <div class="excel" style="margin-top:16px">
+        <h3>The same thing in Excel</h3>
+        <ol>
+          <li>Min in <code>E2 = 6</code>, Max in <code>E3 = 10</code>.</li>
+          <li><code>=$E$2+($E$3-$E$2)*RAND()</code> &nbsp;or&nbsp; <code>=4*RAND()+6</code> — drag down 40 rows.</li>
+          <li><code>=AVERAGE(B4:B43)</code> under the column. Press <strong>F9</strong> and watch it move, but stay near 8.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="divider"><span>Part 2 · Now compute a probability</span></div>
+
+    <div class="card step" data-n="6">
+      <h2>Probability = the <em>area</em> under the density</h2>
+      <p>For a continuous variable we never ask "what is the chance of exactly $8" — that chance is zero. We ask about a <strong>range</strong>, and the answer is the area of the piece of the shape sitting above that range.</p>
+      <p>Here the shape is a <strong>rectangle</strong>, so you can compute the area by hand — no Excel needed:</p>
+      <div class="fnbox" style="margin-bottom:18px">
+        <div class="fnhead">Area of the shaded rectangle</div>
+        <div class="fnbody">
+          <div class="fx">P(c ≤ X ≤ d) = height × width =
+            <span class="frac"><span>1</span><span class="den">b − a</span></span> × (d − c) =
+            <span class="frac"><span>d − c</span><span class="den">b − a</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="presets">
+        <button class="btn ghost sm" data-pre="cu|gt|9|">P(X &gt; 9)</button>
+        <button class="btn ghost sm" data-pre="cu|lt|7|">P(X &lt; 7)</button>
+        <button class="btn ghost sm" data-pre="cu|bt|7|9">P(7 &lt; X &lt; 9)</button>
+      </div>
+      <div class="pq">
+        <div><label>Question</label>
+          <select id="cu-mode">
+            <option value="lt">P(X &lt; value)</option>
+            <option value="gt" selected>P(X &gt; value)</option>
+            <option value="bt">P(low &lt; X &lt; high)</option>
+          </select>
+        </div>
+        <div><label id="cu-l1">Value</label><input type="number" id="cu-v1" value="9" step="0.25"></div>
+        <div id="cu-w2" style="display:none"><label>High</label><input type="number" id="cu-v2" value="9" step="0.25"></div>
+      </div>
+      <div class="answerbox">
+        <div class="lab">Worked out</div>
+        <div class="work" id="cu-work"></div>
+        <div class="big" id="cu-prob">—</div>
+        <div class="exl" id="cu-exl"></div>
+      </div>
+      <div class="chartbox"><div class="cap">The shaded area <em>is</em> the probability</div><svg id="cu-parea" viewBox="0 0 620 210"></svg></div>
+      <p style="margin-bottom:0"><strong>Sanity check:</strong> set the range to the whole window, $6 to $10. The area is 1 — the price is certainly somewhere in there. Every density has total area 1.</p>
+    </div>
+
+    <div class="card quiz" data-quiz="cu" data-ans="1">
+      <div class="q">For the price X ~ U(6, 10), what is P(X = 8) exactly?</div>
+      <button class="opt">0.25, because 8 is one of four dollars in the range.</button>
+      <button class="opt">0, because a single point has no width, so it encloses no area.</button>
+      <button class="opt">1/4, the same as the height of the density.</button>
+      <button class="opt">0.5, because 8 is the expected value.</button>
+      <div class="fb"></div>
+    </div>
+  </section>
+
+  <!-- ============ DISCRETE UNIFORM ============ -->
+  <section class="panel" id="p-du" style="--accent:var(--amber);--accent-soft:var(--amber-soft)">
+
+    <div class="card step" data-n="1">
+      <h2>The pattern, in plain words</h2>
+      <div class="plain">A short list of values, each one just as likely as the others — and <em>only</em> those values can happen.</div>
+      <h3>Our example</h3>
+      <p>Throwing a die. The possible values are <strong>1, 2, 3, 4, 5, 6</strong>, each with probability 1/6. There is no 3.7 and no 0 — the values are separate, countable outcomes.</p>
+      <p><strong>Continuous vs. discrete:</strong> the price on the previous tab was one unbroken line because every value in between was possible. Here we draw <em>separate bars</em>, because the in-between values cannot occur.</p>
+      <span class="notation">X ~ DU(a, b)&nbsp;&nbsp;→&nbsp;&nbsp;here X ~ DU(1, 6)</span>
+    </div>
+
+    <div class="card step" data-n="2">
+      <h2>The function behind the pattern</h2>
+      <div class="fnbox">
+        <div class="fnhead">Probability mass function &nbsp;·&nbsp; f(x)</div>
+        <div class="fnbody">
+          <div class="fx">f(x) = <span class="frac"><span>1</span><span class="den">n</span></span>
+            &nbsp;&nbsp;<span style="font-size:.78em;color:var(--soft)">where&nbsp; n = (b − a) + 1</span></div>
+          <div class="fnnote">
+            n is the <b>number of different possible values</b>. For a die, n = (6 − 1) + 1 = 6, so every bar has height 1/6.
+            Here the height <b>is</b> the probability — that is what makes it a <b>mass</b> function rather than a density.
+          </div>
+        </div>
+        <div class="ms">
+          <div><span>Parameters</span>a = lowest, b = highest</div>
+          <div><span>Mean</span>(a + b) / 2</div>
+          <div><span>St. dev.</span>√( ((b − a + 1)² − 1) / 12 )</div>
+        </div>
+      </div>
+      <div class="params">
+        <div><label>a — lowest</label><input type="number" id="du-a" value="1" step="1"></div>
+        <div><label>b — highest</label><input type="number" id="du-b" value="6" step="1"></div>
+        <div class="hint">Try a = 1, b = 10 for a ten-sided die. More bars, each one shorter — the same total probability of 1 shared among more values.</div>
+      </div>
+      <div class="chartbox"><div class="cap">The mass function f(x) — bar heights are probabilities</div><svg id="du-shape" viewBox="0 0 620 210"></svg></div>
+    </div>
+
+    <div class="card step" data-n="3">
+      <h2>Expected value</h2>
+      <div class="ev">
+        <div><div class="lab">Formula</div><div class="formula">E[X] = Σ x · f(x) = (a + b) / 2</div></div>
+        <div><div class="lab">Here</div><div class="formula" id="du-evwork">(1 + 6) / 2</div></div>
+        <div><div class="lab">E[X]</div><div class="val" id="du-ev">3.50</div></div>
+      </div>
+      <p style="margin-top:12px">This is the same weighted average you already used: each value times its probability, added up. Since every probability is 1/n, it collapses to the midpoint.</p>
+    </div>
+
+    <div class="card step" data-n="4">
+      <h2>Stop — answer this before you generate anything</h2>
+      <div class="pause">
+        <div class="q">Can a die ever actually show 3.5? So what is this number telling you?</div>
+        <textarea placeholder="Write your answer here first, then reveal..."></textarea>
+        <button class="btn ghost" style="margin-top:10px" data-reveal="du-rev">Show the answer</button>
+        <div class="reveal" id="du-rev">
+          <b>No — 3.5 is not a possible roll at all.</b> It is the balance point of the six bars.
+          Same lesson as the earthquake example: <b>an expected value does not have to be a value the variable can take.</b>
+          It is the average you approach after many, many rolls.
+        </div>
+      </div>
+    </div>
+
+    <div class="card step" data-n="5">
+      <h2>Generate the values of a die thrown 50 times</h2>
+      <div class="btnrow">
+        <label for="du-n">Sample size</label>
+        <input type="number" id="du-n" value="50" min="1" max="5000">
+        <button class="btn" data-gen="du">Generate sample</button>
+        <button class="btn ghost" data-add="du">Add 50 more</button>
+        <button class="btn ghost" data-clear="du">Clear</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Throws</div><div class="num" id="du-cnt">0</div></div>
+        <div class="stat hi"><div class="lab">Sample average</div><div class="num" id="du-mean">—</div></div>
+        <div class="stat"><div class="lab">Expected value</div><div class="num" id="du-ev2">3.50</div></div>
+        <div class="stat"><div class="lab">Difference</div><div class="num" id="du-diff">—</div></div>
+      </div>
+      <div class="chips" id="du-chips"><span class="empty">Your throws will appear here.</span></div>
+      <div class="chartbox"><div class="cap">Your sample (same scale as the mass function above)</div><svg id="du-hist" viewBox="0 0 620 210"></svg></div>
+      <button class="btn ghost" data-copy="du">Copy values for Excel</button>
+      <div class="excel" style="margin-top:16px">
+        <h3>The same thing in Excel</h3>
+        <ol>
+          <li><code>=RANDBETWEEN(1,6)</code> — drag down 50 rows.</li>
+          <li><code>=AVERAGE(B22:B71)</code> under the column. Press <strong>F9</strong> a few times: does it ever land exactly on 3.5?</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="divider"><span>Part 2 · Now compute a probability</span></div>
+
+    <div class="card step" data-n="6">
+      <h2>Probability = <em>add up the bars</em></h2>
+      <p>No area here. Each bar already <strong>is</strong> a probability, so you simply add the ones you care about:</p>
+      <div class="fnbox" style="margin-bottom:18px">
+        <div class="fnhead">Sum of the highlighted bars</div>
+        <div class="fnbody">
+          <div class="fx">P(X in a set) = Σ f(x) =
+            <span class="frac"><span>how many values qualify</span><span class="den">n</span></span>
+          </div>
+        </div>
+      </div>
+      <div class="presets">
+        <button class="btn ghost sm" data-pre="du|gt|5|">P(X ≥ 5)</button>
+        <button class="btn ghost sm" data-pre="du|lt|3|">P(X ≤ 3)</button>
+        <button class="btn ghost sm" data-pre="du|bt|2|4">P(2 ≤ X ≤ 4)</button>
+      </div>
+      <div class="pq">
+        <div><label>Question</label>
+          <select id="du-mode">
+            <option value="lt">P(X ≤ value)</option>
+            <option value="gt" selected>P(X ≥ value)</option>
+            <option value="bt">P(low ≤ X ≤ high)</option>
+          </select>
+        </div>
+        <div><label id="du-l1">Value</label><input type="number" id="du-v1" value="5" step="1"></div>
+        <div id="du-w2" style="display:none"><label>High</label><input type="number" id="du-v2" value="5" step="1"></div>
+      </div>
+      <div class="answerbox">
+        <div class="lab">Worked out</div>
+        <div class="work" id="du-work"></div>
+        <div class="big" id="du-prob">—</div>
+        <div class="exl" id="du-exl"></div>
+      </div>
+      <div class="chartbox"><div class="cap">The highlighted bars add up to the probability</div><svg id="du-parea" viewBox="0 0 620 210"></svg></div>
+      <h3>The cumulative probability, bar by bar</h3>
+      <p style="font-size:.95rem">Running total as you move left to right. The last entry must be 1.</p>
+      <div style="overflow:auto"><table class="cumtable" id="du-cum"></table></div>
+    </div>
+
+    <div class="card quiz" data-quiz="du" data-ans="2">
+      <div class="q">A fair die has E[X] = 3.5. Which statement is correct?</div>
+      <button class="opt">3.5 is the roll you are most likely to get.</button>
+      <button class="opt">After six throws the average will be exactly 3.5.</button>
+      <button class="opt">3.5 is never an actual roll — it is the long-run average over many throws.</button>
+      <button class="opt">If your average is not 3.5, the die must be unfair.</button>
+      <div class="fb"></div>
+    </div>
+  </section>
+
+  <!-- ============ NORMAL ============ -->
+  <section class="panel" id="p-nm" style="--accent:var(--indigo);--accent-soft:var(--indigo-soft)">
+
+    <div class="card step" data-n="1">
+      <h2>The pattern, in plain words</h2>
+      <div class="plain">Values crowd around a center, and the further you move away — in either direction — the rarer they get.</div>
+      <h3>Our example</h3>
+      <p>The price of product A is a random variable with the distribution <strong>N(8, 2)</strong>. Most prices land near $8. Prices near $4 or $12 happen, but far less often.</p>
+      <p><strong>Important:</strong> the uniform price had a hard floor at $6 and a hard ceiling at $10. The normal has <em>no</em> limits — possible values run from minus infinity to plus infinity, but only a relatively small range has much chance of occurring.</p>
+      <span class="notation">X ~ N(μ, σ)&nbsp;&nbsp;→&nbsp;&nbsp;here X ~ N(8, 2)</span>
+    </div>
+
+    <div class="card step" data-n="2">
+      <h2>The function behind the pattern</h2>
+      <div class="fnbox">
+        <div class="fnhead">Probability density function &nbsp;·&nbsp; f(x)</div>
+        <div class="fnbody">
+          <div class="fx">
+            f(x) = <span class="frac"><span>1</span><span class="den">σ√(2π)</span></span>
+            <i>e</i><sup style="font-size:.72em">−&frac12;((x−μ)/σ)<sup style="font-size:.8em">2</sup></sup>
+          </div>
+          <div class="fnnote">
+            Quite complex, in spite of its nice bell shape — and you will never type it by hand.
+            It is a <b>density</b>, just like the uniform, so probability is again the <b>area</b> underneath.
+            The difference: this area has no simple rectangle formula, so <b>Excel computes it for us</b>.
+          </div>
+        </div>
+        <div class="ms">
+          <div><span>Parameters</span>μ = mean, σ = standard deviation</div>
+          <div><span>Mean</span>μ</div>
+          <div><span>St. dev.</span>σ</div>
+        </div>
+      </div>
+      <div class="params">
+        <div><label>μ — center</label><input type="number" id="nm-m" value="8" step="0.5"></div>
+        <div><label>σ — spread</label><input type="number" id="nm-s" value="2" step="0.5" min="0.1"></div>
+        <div class="hint">Changing μ shifts the curve left or right. Changing σ makes it more or less spread out. Two numbers describe the entire pattern.</div>
+      </div>
+      <div class="chartbox"><div class="cap">The density function f(x)</div><svg id="nm-shape" viewBox="0 0 620 210"></svg></div>
+    </div>
+
+    <div class="card step" data-n="3">
+      <h2>Expected value</h2>
+      <div class="ev">
+        <div><div class="lab">Formula</div><div class="formula">E[X] = μ</div></div>
+        <div><div class="lab">Here</div><div class="formula" id="nm-evwork">μ = 8</div></div>
+        <div><div class="lab">E[X]</div><div class="val" id="nm-ev">8.00</div></div>
+      </div>
+      <p style="margin-top:12px">Here the expected value is handed to you directly — it <em>is</em> one of the two parameters. The bell is symmetric, so its balance point sits right at the peak.</p>
+    </div>
+
+    <div class="card step" data-n="4">
+      <h2>Stop — answer this before you generate anything</h2>
+      <div class="pause">
+        <div class="q">The Continuous Uniform tab also had an expected value of $8. If both distributions have E[X] = 8, what is different between them?</div>
+        <textarea placeholder="Write your answer here first, then reveal..."></textarea>
+        <button class="btn ghost" style="margin-top:10px" data-reveal="nm-rev">Show the answer</button>
+        <div class="reveal" id="nm-rev">
+          <b>Same center, completely different pattern.</b><br>
+          U(6,10): every price between $6 and $10 equally likely, nothing outside that window.<br>
+          N(8,2): prices crowd near $8, and values below $6 or above $10 are possible but less common.<br><br>
+          <b>The lesson:</b> an expected value tells you where the center is. It tells you nothing about the shape —
+          which is exactly why we name the distribution instead of only quoting its average.
+        </div>
+      </div>
+    </div>
+
+    <div class="card step" data-n="5">
+      <h2>Generate 50 values of the price</h2>
+      <div class="btnrow">
+        <label for="nm-n">Sample size</label>
+        <input type="number" id="nm-n" value="50" min="1" max="5000">
+        <button class="btn" data-gen="nm">Generate sample</button>
+        <button class="btn ghost" data-add="nm">Add 50 more</button>
+        <button class="btn ghost" data-clear="nm">Clear</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Values drawn</div><div class="num" id="nm-cnt">0</div></div>
+        <div class="stat hi"><div class="lab">Sample average</div><div class="num" id="nm-mean">—</div></div>
+        <div class="stat"><div class="lab">Expected value</div><div class="num" id="nm-ev2">8.00</div></div>
+        <div class="stat"><div class="lab">Difference</div><div class="num" id="nm-diff">—</div></div>
+      </div>
+      <div class="chips" id="nm-chips"><span class="empty">Your values will appear here.</span></div>
+      <div class="chartbox"><div class="cap">Your sample (same scale as the density above)</div><svg id="nm-hist" viewBox="0 0 620 210"></svg></div>
+      <button class="btn ghost" data-copy="nm">Copy values for Excel</button>
+      <div class="excel" style="margin-top:16px">
+        <h3>The same thing in Excel</h3>
+        <ol>
+          <li>Mean in <code>H3 = 8</code>, StDev in <code>H4 = 2</code>.</li>
+          <li><code>=NORM.INV(RAND(),$H$3,$H$4)</code> — drag down 50 rows.</li>
+          <li><code>=AVERAGE(E5:E54)</code> under the column.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="divider"><span>Part 2 · Now compute a probability</span></div>
+
+    <div class="card step" data-n="6">
+      <h2>Probability is still the <em>area</em> — but Excel finds it for us</h2>
+      <p>Exactly the same idea as the uniform: the probability of a range is the <strong>area under the curve</strong> above that range. The only difference is that a bell has no neat rectangle formula, so we hand the job to Excel.</p>
+      <div class="fnbox" style="margin-bottom:18px">
+        <div class="fnhead">The one function you need</div>
+        <div class="fnbody">
+          <div class="fx" style="font-family:Consolas,monospace;font-size:1.05rem;color:#9d1d1d">
+            =NORM.DIST(x, mean, standard_dev, TRUE)
+          </div>
+          <div class="fnnote">
+            With <b>TRUE</b> it returns the <b>area to the LEFT of x</b> — the cumulative probability, P(X &lt; x).
+            Everything else is built from that one number:<br>
+            P(X &gt; x) = 1 − area to the left &nbsp;·&nbsp; P(c &lt; X &lt; d) = area left of d − area left of c
+          </div>
+        </div>
+      </div>
+      <div class="presets">
+        <button class="btn ghost sm" data-pre="nm|gt|10|">P(X &gt; 10)</button>
+        <button class="btn ghost sm" data-pre="nm|lt|6|">P(X &lt; 6)</button>
+        <button class="btn ghost sm" data-pre="nm|bt|6|10">P(6 &lt; X &lt; 10)</button>
+      </div>
+      <div class="pq">
+        <div><label>Question</label>
+          <select id="nm-mode">
+            <option value="lt">P(X &lt; value)</option>
+            <option value="gt" selected>P(X &gt; value)</option>
+            <option value="bt">P(low &lt; X &lt; high)</option>
+          </select>
+        </div>
+        <div><label id="nm-l1">Value</label><input type="number" id="nm-v1" value="10" step="0.5"></div>
+        <div id="nm-w2" style="display:none"><label>High</label><input type="number" id="nm-v2" value="10" step="0.5"></div>
+      </div>
+      <div class="answerbox">
+        <div class="lab">Worked out</div>
+        <div class="work" id="nm-work"></div>
+        <div class="big" id="nm-prob">—</div>
+        <div class="exl" id="nm-exl"></div>
+      </div>
+      <div class="chartbox"><div class="cap">The shaded area <em>is</em> the probability</div><svg id="nm-parea" viewBox="0 0 620 210"></svg></div>
+
+      <h3>Your turn — the NOLA rainfall example</h3>
+      <p>The annual amount of rainfall in NOLA is normally distributed with mean = 65 inches and standard deviation = 15 inches, <strong>N(65, 15)</strong>. Write the Excel formula for each, then compute it.</p>
+      <div class="grid2">
+        <div class="excel"><h3>Getting more than 85 in?</h3>
+          <p style="margin:0 0 7px;font-family:'Cambria Math',Georgia,serif">P(X &gt; 85) = 1 − P(X &lt; 85)</p>
+          <code>=1-NORM.DIST(85,65,15,TRUE)</code></div>
+        <div class="excel"><h3>Getting less than 40 in?</h3>
+          <p style="margin:0 0 7px;font-family:'Cambria Math',Georgia,serif">P(X &lt; 40)</p>
+          <code>=NORM.DIST(40,65,15,TRUE)</code></div>
+        <div class="excel"><h3>Getting between 40 and 80 in?</h3>
+          <p style="margin:0 0 7px;font-family:'Cambria Math',Georgia,serif">P(40 &lt; X &lt; 80) = P(X &lt; 80) − P(X &lt; 40)</p>
+          <code>=NORM.DIST(80,65,15,TRUE)-NORM.DIST(40,65,15,TRUE)</code></div>
+        <div class="excel" style="background:#fff8ec;border-color:#f0d9ae;border-left-color:#c2680a">
+          <h3 style="color:#c2680a">Check your three answers</h3>
+          <button class="btn ghost sm" style="--accent:#c2680a" data-reveal="nola">Show the answers</button>
+          <div class="reveal" id="nola" style="background:#fdf2e3;margin-top:10px">
+            P(X &gt; 85) = <b>0.0912</b><br>
+            P(X &lt; 40) = <b>0.0478</b><br>
+            P(40 &lt; X &lt; 80) = <b>0.7936</b><br><br>
+            Notice the third one is by far the biggest — 40 to 80 inches straddles the center, where the curve is tallest and the area piles up.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card quiz" data-quiz="nm" data-ans="1">
+      <div class="q">In Excel, <code style="color:#9d1d1d">=NORM.DIST(10, 8, 2, TRUE)</code> returns 0.8413. What is that number?</div>
+      <button class="opt">The height of the bell curve at x = 10.</button>
+      <button class="opt">The area under the curve to the left of 10, that is P(X &lt; 10).</button>
+      <button class="opt">The probability that X equals exactly 10.</button>
+      <button class="opt">The area to the right of 10.</button>
+      <div class="fb"></div>
+    </div>
+  </section>
+
+  <!-- ============ COMPARE ============ -->
+  <div class="card compare">
+    <h2>All three side by side</h2>
+    <p>Same recipe every time: a function, one or two parameters, a shape, a balance point, and a way to get probability out of it.</p>
+    <div class="cmp3">
+      <div class="cmp"><div class="t">Continuous Uniform</div><div class="e">X ~ U(6, 10) · density</div>
+        <svg id="c1" viewBox="0 0 260 110"></svg>
+        <div class="n">E[X] = 8 · probability = area, and the area is a rectangle you compute by hand</div></div>
+      <div class="cmp"><div class="t">Discrete Uniform</div><div class="e">X ~ DU(1, 6) · mass</div>
+        <svg id="c2" viewBox="0 0 260 110"></svg>
+        <div class="n">E[X] = 3.5 · probability = add up the bars, count ÷ n</div></div>
+      <div class="cmp"><div class="t">Normal</div><div class="e">X ~ N(8, 2) · density</div>
+        <svg id="c3" viewBox="0 0 260 110"></svg>
+        <div class="n">E[X] = 8 · probability = area, and Excel computes it with NORM.DIST</div></div>
+    </div>
+    <div class="punch">
+      The first and the third have the <strong>same expected value of 8</strong> — and look nothing alike.
+      The expected value marks the center. The <strong>distribution</strong> is what tells you the whole story.
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Before you leave class</h2>
+    <p>Open your Probability Template, rebuild all three columns, and put <code>=AVERAGE()</code> under each one:</p>
+    <div class="grid2">
+      <div><p style="margin:0 0 6px"><strong>continuous Uniform tab</strong></p><code>=$E$2+($E$3-$E$2)*RAND()</code></div>
+      <div><p style="margin:0 0 6px"><strong>Discrete Uniform tab</strong></p><code>=RANDBETWEEN(1,6)</code></div>
+      <div><p style="margin:0 0 6px"><strong>Normal tab</strong></p><code>=NORM.INV(RAND(),$H$3,$H$4)</code></div>
+      <div><p style="margin:0 0 6px"><strong>Probabilities on the Normal tab</strong></p><code>=NORM.DIST(x,$H$3,$H$4,TRUE)</code></div>
+    </div>
+    <p style="margin-top:14px">Then answer in one sentence each: <em>why does the average keep changing when you press F9, and why does it keep landing close to the expected value?</em></p>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------- tabs ---------- */
+  document.querySelectorAll('.tab').forEach(function(t){
+    t.addEventListener('click',function(){
+      document.querySelectorAll('.tab').forEach(function(x){x.classList.remove('on');});
+      document.querySelectorAll('.panel').forEach(function(x){x.classList.remove('on');});
+      t.classList.add('on');
+      document.getElementById('p-'+t.dataset.k).classList.add('on');
+      window.scrollTo({top:document.querySelector('.tabs').offsetTop-12,behavior:'smooth'});
+    });
+  });
+
+  /* ---------- reveals ---------- */
+  document.querySelectorAll('[data-reveal]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var r=document.getElementById(b.dataset.reveal);
+      r.classList.toggle('on');
+      b.textContent=r.classList.contains('on')?'Hide the answer':'Show the answer';
+    });
+  });
+
+  /* ---------- quizzes ---------- */
+  var FB={
+    cu:["Probability for a continuous variable comes from area, and a single point has zero width.",
+        "Correct. A single point encloses no area, so its probability is exactly 0. We can only ask about ranges.",
+        "1/4 is the height of the density. Height is not probability for a continuous variable.",
+        "The expected value is the balance point, not a probability."],
+    du:["Every face is equally likely — and 3.5 is not even possible.",
+        "Six throws will almost never average exactly 3.5.",
+        "Correct. 3.5 is the balance point of the six bars, not an outcome.",
+        "A fair die's sample average wanders around 3.5; that is normal, not evidence of bias."],
+    nm:["The height is what you get with FALSE, not TRUE — and height is not a probability.",
+        "Correct. TRUE gives the cumulative area to the left of x. To get P(X > 10) you would use 1 − 0.8413 = 0.1587.",
+        "For a continuous variable the probability of exactly one value is 0.",
+        "That is 1 − 0.8413 = 0.1587. TRUE always returns the LEFT area."]
+  };
+  document.querySelectorAll('.quiz').forEach(function(q){
+    var ans=parseInt(q.dataset.ans,10), key=q.dataset.quiz;
+    var opts=q.querySelectorAll('.opt'), fb=q.querySelector('.fb'), done=false;
+    opts.forEach(function(o,i){
+      o.addEventListener('click',function(){
+        if(done) return; done=true;
+        opts[ans].classList.add('right');
+        if(i!==ans) o.classList.add('wrong');
+        fb.className='fb on '+(i===ans?'good':'bad');
+        fb.innerHTML='<strong>'+(i===ans?'Correct. ':'Not quite. ')+'</strong>'+FB[key][i];
+      });
+    });
+  });
+
+  /* ---------- helpers ---------- */
+  function num(id){ var v=parseFloat(document.getElementById(id).value); return isNaN(v)?0:v; }
+  function fmt(x,d){ return x.toFixed(d===undefined?2:d); }
+  function el(t,a){ var e=document.createElementNS('http://www.w3.org/2000/svg',t);
+    for(var k in a) e.setAttribute(k,a[k]); return e; }
+  function clear(s){ while(s.firstChild) s.removeChild(s.firstChild); }
+  function erf(x){
+    var s=x<0?-1:1; x=Math.abs(x);
+    var t=1/(1+0.3275911*x);
+    var y=1-((((1.061405429*t-1.453152027)*t+1.421413741)*t-0.284496736)*t+0.254829592)*t*Math.exp(-x*x);
+    return s*y;
+  }
+  function ncdf(x,m,s){ return 0.5*(1+erf((x-m)/(s*Math.SQRT2))); }
+
+  var W=620,H=210,PL=44,PR=18,PT=18,PB=36;
+  function sx(v,d){ return PL+(v-d[0])/(d[1]-d[0])*(W-PL-PR); }
+  function sy(v,max){ return H-PB-(v/max)*(H-PT-PB); }
+  function axis(svg,dom,ticks){
+    svg.appendChild(el('line',{x1:PL,y1:H-PB,x2:W-PR,y2:H-PB,stroke:'#b9c2d8','stroke-width':1.5}));
+    ticks.forEach(function(t){
+      var x=sx(t,dom);
+      svg.appendChild(el('line',{x1:x,y1:H-PB,x2:x,y2:H-PB+5,stroke:'#b9c2d8','stroke-width':1.5}));
+      var tx=el('text',{x:x,y:H-PB+20,'text-anchor':'middle','font-size':12,fill:'#6b7490',
+        'font-family':'Segoe UI,system-ui,sans-serif'});
+      tx.textContent=(t%1!==0)?t.toFixed(1):t; svg.appendChild(tx);
+    });
+  }
+  function vline(svg,x,label,color,o){
+    o=o||{};
+    if(x<PL-1||x>W-PR+1) return;
+    svg.appendChild(el('line',{x1:x,y1:PT-4,x2:x,y2:H-PB,stroke:color,'stroke-width':2,
+      'stroke-dasharray':o.solid?'none':'6 4'}));
+    if(!label) return;
+    var t=el('text',{x:x+(o.dx||0),y:o.y||(PT+8),'text-anchor':o.anchor||'middle','font-size':12,
+      fill:color,'font-weight':700,'font-family':'Segoe UI,system-ui,sans-serif',
+      stroke:'#fff','stroke-width':3.5,'stroke-linejoin':'round','paint-order':'stroke'});
+    t.textContent=label; svg.appendChild(t);
+  }
+  function ticksOf(lo,hi,n){ var o=[],i; for(i=0;i<=n;i++) o.push(Math.round((lo+(hi-lo)*i/n)*10)/10); return o; }
+  function ylabel(svg,txt){
+    var t=el('text',{x:10,y:H/2,'font-size':11,fill:'#8891ab','text-anchor':'middle',
+      transform:'rotate(-90 10 '+(H/2)+')','font-family':'Segoe UI,system-ui,sans-serif'});
+    t.textContent=txt; svg.appendChild(t);
+  }
+
+  /* ---------- config ---------- */
+  var S={cu:[],du:[],nm:[]};
+  var COLOR={cu:'#0d9488',du:'#c2680a',nm:'#4f46e5'};
+
+  function params(k){
+    if(k==='cu'){ var a=num('cu-a'),b=num('cu-b'); if(b<=a) b=a+1; return {a:a,b:b}; }
+    if(k==='du'){ var a2=Math.round(num('du-a')),b2=Math.round(num('du-b'));
+      if(b2<a2) b2=a2; if(b2-a2>40) b2=a2+40; return {a:a2,b:b2,n:b2-a2+1}; }
+    var m=num('nm-m'),s=num('nm-s'); if(s<=0) s=0.1; return {m:m,s:s};
+  }
+  function expected(k){ var p=params(k); return k==='nm'?p.m:(p.a+p.b)/2; }
+  function domain(k){
+    var p=params(k);
+    if(k==='cu'){ var pad=(p.b-p.a)*0.18; return [p.a-pad,p.b+pad]; }
+    if(k==='du') return [p.a-0.7,p.b+0.7];
+    return [p.m-4*p.s,p.m+4*p.s];
+  }
+  function drawValue(k){
+    var p=params(k);
+    if(k==='cu') return p.a+(p.b-p.a)*Math.random();
+    if(k==='du') return p.a+Math.floor(Math.random()*p.n);
+    var u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
+    return p.m+p.s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
+  }
+
+  /* ---------- the density / mass picture ---------- */
+  function paintShape(svg,k,shade){
+    clear(svg);
+    var p=params(k), dom=domain(k), c=COLOR[k];
+    ylabel(svg,k==='du'?'probability f(x)':'density f(x)');
+
+    if(k==='cu'){
+      var top=sy(1,1.35);
+      svg.appendChild(el('rect',{x:sx(p.a,dom),y:top,width:sx(p.b,dom)-sx(p.a,dom),
+        height:(H-PB)-top,fill:c,opacity:shade?.1:.22}));
+      if(shade){
+        var lo=Math.max(shade[0],p.a), hi=Math.min(shade[1],p.b);
+        if(hi>lo) svg.appendChild(el('rect',{x:sx(lo,dom),y:top,width:sx(hi,dom)-sx(lo,dom),
+          height:(H-PB)-top,fill:c,opacity:.62}));
+      }
+      svg.appendChild(el('polyline',{points:[sx(p.a,dom)+','+(H-PB),sx(p.a,dom)+','+top,
+        sx(p.b,dom)+','+top,sx(p.b,dom)+','+(H-PB)].join(' '),fill:'none',stroke:c,'stroke-width':3}));
+      var ht=el('text',{x:sx(p.a,dom)-6,y:top-5,'text-anchor':'start','font-size':12,fill:c,'font-weight':700,
+        'font-family':'Segoe UI,sans-serif'});
+      ht.textContent='height = 1/(b−a) = '+(1/(p.b-p.a)).toFixed(3); svg.appendChild(ht);
+      axis(svg,dom,ticksOf(dom[0],dom[1],6));
+    }
+    else if(k==='du'){
+      var bw=(sx(p.a+1,dom)-sx(p.a,dom))*0.6, i, top2=sy(1,1.35);
+      for(i=0;i<p.n;i++){
+        var val=p.a+i, x=sx(val,dom);
+        var on=shade?(val>=shade[0]&&val<=shade[1]):true;
+        svg.appendChild(el('rect',{x:x-bw/2,y:top2,width:bw,height:(H-PB)-top2,
+          fill:c,opacity:on?.82:(shade?.16:.82),rx:3}));
+      }
+      var ht2=el('text',{x:PL+4,y:top2-5,'text-anchor':'start','font-size':12,fill:c,'font-weight':700,
+        'font-family':'Segoe UI,sans-serif'});
+      ht2.textContent='each bar = 1/n = 1/'+p.n+' = '+(1/p.n).toFixed(3); svg.appendChild(ht2);
+      var tk=[]; for(i=0;i<p.n;i++) tk.push(p.a+i);
+      axis(svg,dom,p.n<=14?tk:ticksOf(p.a,p.b,7).map(Math.round));
+    }
+    else{
+      var pts=[],j,xv,yv;
+      for(j=0;j<=200;j++){
+        xv=dom[0]+(dom[1]-dom[0])*j/200;
+        yv=Math.exp(-0.5*Math.pow((xv-p.m)/p.s,2));
+        pts.push([sx(xv,dom),sy(yv,1.18)]);
+      }
+      svg.appendChild(el('path',{d:'M '+PL+' '+(H-PB)+' L '+pts.map(function(q){return q[0]+' '+q[1];}).join(' L ')+
+        ' L '+(W-PR)+' '+(H-PB)+' Z',fill:c,opacity:shade?.09:.2}));
+      if(shade){
+        var sp=[],lo2=Math.max(shade[0],dom[0]),hi2=Math.min(shade[1],dom[1]);
+        if(hi2>lo2){
+          for(j=0;j<=160;j++){
+            xv=lo2+(hi2-lo2)*j/160;
+            yv=Math.exp(-0.5*Math.pow((xv-p.m)/p.s,2));
+            sp.push(sx(xv,dom)+' '+sy(yv,1.18));
+          }
+          svg.appendChild(el('path',{d:'M '+sx(lo2,dom)+' '+(H-PB)+' L '+sp.join(' L ')+
+            ' L '+sx(hi2,dom)+' '+(H-PB)+' Z',fill:c,opacity:.58}));
+        }
+      }
+      svg.appendChild(el('polyline',{points:pts.map(function(q){return q[0]+','+q[1];}).join(' '),
+        fill:'none',stroke:c,'stroke-width':3}));
+      axis(svg,dom,ticksOf(dom[0],dom[1],6));
+    }
+  }
+  function drawShape(k){
+    var svg=document.getElementById(k+'-shape');
+    paintShape(svg,k,null);
+    vline(svg,sx(expected(k),domain(k)),'E[X] = '+fmt(expected(k)),'#1a1f36');
+  }
+
+  /* ---------- histogram ---------- */
+  function drawHist(k){
+    var svg=document.getElementById(k+'-hist'); clear(svg);
+    var dom=domain(k), c=COLOR[k], data=S[k], p=params(k), i;
+    ylabel(svg,'count');
+    if(!data.length){
+      var t=el('text',{x:W/2,y:H/2,'text-anchor':'middle','font-size':14,fill:'#9aa3bd',
+        'font-family':'Segoe UI,sans-serif'});
+      t.textContent='Generate a sample to see it here'; svg.appendChild(t);
+      axis(svg,dom,ticksOf(dom[0],dom[1],6)); return;
+    }
+    if(k==='du'){
+      var bins=[]; for(i=0;i<p.n;i++) bins.push(0);
+      data.forEach(function(v){ var idx=Math.round(v)-p.a; if(idx>=0&&idx<bins.length) bins[idx]++; });
+      var mx=Math.max.apply(null,bins)||1, barw=(sx(p.a+1,dom)-sx(p.a,dom))*0.6;
+      bins.forEach(function(ct,ii){
+        if(!ct) return;
+        var x=sx(p.a+ii,dom), y=sy(ct,mx*1.3);
+        svg.appendChild(el('rect',{x:x-barw/2,y:y,width:barw,height:(H-PB)-y,fill:c,opacity:.8,rx:3}));
+      });
+      var tk=[]; for(i=0;i<p.n;i++) tk.push(p.a+i);
+      axis(svg,dom,p.n<=14?tk:ticksOf(p.a,p.b,7).map(Math.round));
+    } else {
+      var NB=16, lo=dom[0], hi=dom[1], bw=(hi-lo)/NB, b2=new Array(NB).fill(0);
+      data.forEach(function(v){ var idx=Math.floor((v-lo)/bw); if(idx<0)idx=0; if(idx>=NB)idx=NB-1; b2[idx]++; });
+      var mx2=Math.max.apply(null,b2)||1;
+      for(i=0;i<NB;i++){
+        if(!b2[i]) continue;
+        var x1=sx(lo+i*bw,dom), x2=sx(lo+(i+1)*bw,dom), y3=sy(b2[i],mx2*1.3);
+        svg.appendChild(el('rect',{x:x1+1,y:y3,width:Math.max(1,x2-x1-2),height:(H-PB)-y3,fill:c,opacity:.8,rx:2}));
+      }
+      axis(svg,dom,ticksOf(dom[0],dom[1],6));
+    }
+    vline(svg,sx(expected(k),domain(k)),'E[X]','#1a1f36',{anchor:'end',dx:-6,y:PT+8});
+    var m=data.reduce(function(a,b){return a+b;},0)/data.length;
+    vline(svg,sx(m,domain(k)),'your average','#c0392b',{anchor:'start',dx:6,y:PT+25,solid:true});
+  }
+
+  /* ---------- probability section ---------- */
+  function probBounds(k){
+    var mode=document.getElementById(k+'-mode').value;
+    var v1=num(k+'-v1'), v2=num(k+'-v2'), p=params(k);
+    var far = (k==='nm') ? [p.m-9*p.s,p.m+9*p.s] : (k==='cu'? [p.a,p.b] : [p.a,p.b]);
+    if(mode==='lt') return {mode:mode,lo:far[0],hi:v1,v1:v1,v2:v2};
+    if(mode==='gt') return {mode:mode,lo:v1,hi:far[1],v1:v1,v2:v2};
+    return {mode:mode,lo:Math.min(v1,v2),hi:Math.max(v1,v2),v1:Math.min(v1,v2),v2:Math.max(v1,v2)};
+  }
+  function updateProb(k){
+    var m=document.getElementById(k+'-mode').value;
+    document.getElementById(k+'-w2').style.display=(m==='bt')?'':'none';
+    document.getElementById(k+'-l1').textContent=(m==='bt')?'Low':'Value';
+    var b=probBounds(k), p=params(k), work='', prob=0, exl='';
+
+    if(k==='cu'){
+      var lo=Math.max(b.lo,p.a), hi=Math.min(b.hi,p.b);
+      var w=Math.max(0,hi-lo), tot=p.b-p.a;
+      prob=w/tot;
+      var head=(m==='lt')?('P(X < '+b.v1+')'):(m==='gt')?('P(X > '+b.v1+')'):('P('+b.v1+' < X < '+b.v2+')');
+      work=head+' = ('+fmt(hi,2).replace(/\.00$/,'')+' − '+fmt(lo,2).replace(/\.00$/,'')+') / ('+p.b+' − '+p.a+') = '+
+           fmt(w,2).replace(/\.00$/,'')+' / '+fmt(tot,2).replace(/\.00$/,'');
+      exl='No Excel needed — the shaded piece is a rectangle, so width ÷ total width is the whole calculation.';
+    }
+    else if(k==='du'){
+      var cnt=0,i;
+      for(i=0;i<p.n;i++){ var v=p.a+i; if(v>=b.lo&&v<=b.hi) cnt++; }
+      prob=cnt/p.n;
+      var head2=(m==='lt')?('P(X ≤ '+b.v1+')'):(m==='gt')?('P(X ≥ '+b.v1+')'):('P('+b.v1+' ≤ X ≤ '+b.v2+')');
+      work=head2+' = '+(cnt?new Array(cnt+1).join('1/'+p.n+' + ').slice(0,-3):'0')+' = '+cnt+'/'+p.n;
+      exl='Count how many bars are highlighted, then divide by n = '+p.n+'. Nothing but addition.';
+    }
+    else{
+      var L=ncdf(b.lo,p.m,p.s), Hh=ncdf(b.hi,p.m,p.s);
+      prob=Math.max(0,Hh-L);
+      if(m==='lt'){
+        work='P(X < '+b.v1+') = NORM.DIST('+b.v1+', '+p.m+', '+p.s+', TRUE)';
+        exl='Excel formula: =NORM.DIST('+b.v1+','+p.m+','+p.s+',TRUE)   — the area to the LEFT of '+b.v1+'.';
+      } else if(m==='gt'){
+        work='P(X > '+b.v1+') = 1 − NORM.DIST('+b.v1+', '+p.m+', '+p.s+', TRUE) = 1 − '+fmt(ncdf(b.v1,p.m,p.s),4);
+        exl='Excel formula: =1-NORM.DIST('+b.v1+','+p.m+','+p.s+',TRUE)   — total area 1, minus the area to the left.';
+      } else {
+        work='P('+b.v1+' < X < '+b.v2+') = NORM.DIST('+b.v2+'…) − NORM.DIST('+b.v1+'…) = '+
+             fmt(Hh,4)+' − '+fmt(L,4);
+        exl='Excel formula: =NORM.DIST('+b.v2+','+p.m+','+p.s+',TRUE)-NORM.DIST('+b.v1+','+p.m+','+p.s+',TRUE)';
+      }
+    }
+    document.getElementById(k+'-work').textContent=work;
+    document.getElementById(k+'-prob').textContent=fmt(prob,4);
+    document.getElementById(k+'-exl').textContent=exl;
+
+    var svg=document.getElementById(k+'-parea');
+    paintShape(svg,k,[b.lo,b.hi]);
+    var dom=domain(k);
+    if(k!=='du'){
+      if(m!=='gt') vline(svg,sx(Math.min(b.hi,dom[1]),dom),null,COLOR[k],{solid:true});
+      if(m!=='lt') vline(svg,sx(Math.max(b.lo,dom[0]),dom),null,COLOR[k],{solid:true});
+    }
+    var mid=(Math.max(b.lo,dom[0])+Math.min(b.hi,dom[1]))/2, xm=sx(mid,dom);
+    if(xm>PL&&xm<W-PR){
+      var t=el('text',{x:xm,y:H-PB-14,'text-anchor':'middle','font-size':15,'font-weight':800,
+        fill:'#fff','font-family':'Segoe UI,sans-serif',stroke:COLOR[k],'stroke-width':4,
+        'stroke-linejoin':'round','paint-order':'stroke'});
+      t.textContent=fmt(prob,4); svg.appendChild(t);
+    }
+  }
+  function cumTable(){
+    var p=params('du'), t=document.getElementById('du-cum'), i;
+    var h='<tr><th>Value x</th><th>f(x)</th><th>Cumulative P(X ≤ x)</th></tr>';
+    var n=Math.min(p.n,12);
+    for(i=0;i<n;i++){
+      h+='<tr><td><b>'+(p.a+i)+'</b></td><td>1/'+p.n+'</td><td>'+(i+1)+'/'+p.n+' = '+((i+1)/p.n).toFixed(3)+'</td></tr>';
+    }
+    if(p.n>12) h+='<tr><td colspan="3" style="color:#6b7490;font-style:italic">… showing the first 12 of '+p.n+'</td></tr>';
+    t.innerHTML=h;
+  }
+
+  /* ---------- refresh ---------- */
+  function refresh(k){
+    var ev=expected(k), p=params(k);
+    document.getElementById(k+'-ev').textContent=fmt(ev);
+    document.getElementById(k+'-ev2').textContent=fmt(ev);
+    if(k==='cu') document.getElementById('cu-evwork').textContent='('+p.a+' + '+p.b+') / 2';
+    if(k==='du') document.getElementById('du-evwork').textContent='('+p.a+' + '+p.b+') / 2';
+    if(k==='nm') document.getElementById('nm-evwork').textContent='μ = '+p.m;
+
+    var d=S[k];
+    document.getElementById(k+'-cnt').textContent=d.length;
+    var meanEl=document.getElementById(k+'-mean'), diffEl=document.getElementById(k+'-diff');
+    if(d.length){
+      var m=d.reduce(function(a,b){return a+b;},0)/d.length;
+      meanEl.textContent=fmt(m);
+      diffEl.textContent=(m-ev>=0?'+':'')+fmt(m-ev);
+    } else { meanEl.textContent='—'; diffEl.textContent='—'; }
+
+    var box=document.getElementById(k+'-chips'); box.innerHTML='';
+    if(!d.length){ box.innerHTML='<span class="empty">Your values will appear here.</span>'; }
+    else{
+      var dec=(k==='du')?0:2;
+      d.slice(0,60).forEach(function(v){
+        var s=document.createElement('span'); s.className='chip'; s.textContent=fmt(v,dec); box.appendChild(s);
+      });
+      if(d.length>60){
+        var s2=document.createElement('span'); s2.className='chip'; s2.style.opacity=.65;
+        s2.textContent='+'+(d.length-60)+' more'; box.appendChild(s2);
+      }
+    }
+    drawShape(k); drawHist(k); updateProb(k);
+    if(k==='du') cumTable();
+  }
+
+  /* ---------- events ---------- */
+  document.querySelectorAll('[data-gen]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.gen, n=parseInt(document.getElementById(k+'-n').value,10);
+      if(isNaN(n)||n<1) n=1; if(n>5000) n=5000;
+      S[k]=[]; for(var i=0;i<n;i++) S[k].push(drawValue(k));
+      refresh(k);
+    });
+  });
+  document.querySelectorAll('[data-add]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.add, i;
+      for(i=0;i<50;i++) S[k].push(drawValue(k));
+      if(S[k].length>5000) S[k]=S[k].slice(0,5000);
+      refresh(k);
+    });
+  });
+  document.querySelectorAll('[data-clear]').forEach(function(b){
+    b.addEventListener('click',function(){ S[b.dataset.clear]=[]; refresh(b.dataset.clear); });
+  });
+  document.querySelectorAll('[data-copy]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var k=b.dataset.copy, d=S[k];
+      if(!d.length){ b.textContent='Generate a sample first';
+        setTimeout(function(){b.textContent='Copy values for Excel';},1600); return; }
+      var txt=d.map(function(v){ return (k==='du')?String(Math.round(v)):v.toFixed(4); }).join('\n');
+      var done=function(){ b.textContent='Copied — paste into a column';
+        setTimeout(function(){b.textContent='Copy values for Excel';},1900); };
+      if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,done);
+      else{
+        var ta=document.createElement('textarea'); ta.value=txt; document.body.appendChild(ta);
+        ta.select(); try{document.execCommand('copy');}catch(e){} document.body.removeChild(ta); done();
+      }
+    });
+  });
+  ['cu-a','cu-b','du-a','du-b','nm-m','nm-s'].forEach(function(id){
+    document.getElementById(id).addEventListener('input',function(){ refresh(id.split('-')[0]); });
+  });
+  ['cu','du','nm'].forEach(function(k){
+    ['-mode','-v1','-v2'].forEach(function(sfx){
+      document.getElementById(k+sfx).addEventListener('input',function(){ updateProb(k); });
+      document.getElementById(k+sfx).addEventListener('change',function(){ updateProb(k); });
+    });
+  });
+  document.querySelectorAll('[data-pre]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var a=b.dataset.pre.split('|'), k=a[0];
+      document.getElementById(k+'-mode').value=a[1];
+      document.getElementById(k+'-v1').value=a[2];
+      if(a[3]) document.getElementById(k+'-v2').value=a[3];
+      updateProb(k);
+    });
+  });
+
+  /* ---------- compare minis ---------- */
+  function mini(id,kind){
+    var svg=document.getElementById(id); clear(svg);
+    var w=260,h=110,pl=14,pr=14,pb=20,pt=12,i;
+    function mx(v,lo,hi){ return pl+(v-lo)/(hi-lo)*(w-pl-pr); }
+    svg.appendChild(el('line',{x1:pl,y1:h-pb,x2:w-pr,y2:h-pb,stroke:'rgba(255,255,255,.35)','stroke-width':1.5}));
+    if(kind==='u'){
+      var top=pt+14;
+      svg.appendChild(el('rect',{x:mx(6,5,11),y:top,width:mx(10,5,11)-mx(6,5,11),height:(h-pb)-top,
+        fill:'#2dd4bf',opacity:.45}));
+      svg.appendChild(el('polyline',{points:[mx(6,5,11)+','+(h-pb),mx(6,5,11)+','+top,
+        mx(10,5,11)+','+top,mx(10,5,11)+','+(h-pb)].join(' '),fill:'none',stroke:'#2dd4bf','stroke-width':2.5}));
+    } else if(kind==='d'){
+      for(i=1;i<=6;i++){
+        var x=mx(i,0.3,6.7), bw=(w-pl-pr)/6*0.55, top2=pt+16;
+        svg.appendChild(el('rect',{x:x-bw/2,y:top2,width:bw,height:(h-pb)-top2,fill:'#fbbf24',opacity:.8,rx:2}));
+      }
+    } else {
+      var pts=[];
+      for(i=0;i<=120;i++){
+        var xv=16*i/120, yv=Math.exp(-0.5*Math.pow((xv-8)/2,2));
+        pts.push(mx(xv,0,16)+','+((h-pb)-yv*(h-pb-pt-6)));
+      }
+      svg.appendChild(el('polygon',{points:pl+','+(h-pb)+' '+pts.join(' ')+' '+(w-pr)+','+(h-pb),
+        fill:'#a5b4fc',opacity:.3}));
+      svg.appendChild(el('polyline',{points:pts.join(' '),fill:'none',stroke:'#a5b4fc','stroke-width':2.5}));
+    }
+    var evx=(kind==='d')?mx(3.5,0.3,6.7):(kind==='u'?mx(8,5,11):mx(8,0,16));
+    svg.appendChild(el('line',{x1:evx,y1:pt-2,x2:evx,y2:h-pb,stroke:'#fff','stroke-width':2,'stroke-dasharray':'5 3'}));
+  }
+
+  ['cu','du','nm'].forEach(refresh);
+  mini('c1','u'); mini('c2','d'); mini('c3','n');
+})();
+</script>
+</body>
+</html>
