@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Three Distributions Explorer</title>
+<title>Four Distributions Explorer</title>
 <style>
   :root{
     --ink:#1a1f36; --ink-soft:#49527040; --soft:#4a5370; --muted:#6b7490;
@@ -11,6 +11,7 @@
     --teal:#0d9488; --teal-soft:#e6f6f4;
     --amber:#c2680a; --amber-soft:#fdf2e3;
     --indigo:#4f46e5; --indigo-soft:#ecebfd;
+    --rose:#be185d; --rose-soft:#fce7f1;
     --accent:var(--teal); --accent-soft:var(--teal-soft);
   }
   *{box-sizing:border-box}
@@ -59,6 +60,7 @@
   .tab[data-k="cu"].on{background:var(--teal);border-color:var(--teal)}
   .tab[data-k="du"].on{background:var(--amber);border-color:var(--amber)}
   .tab[data-k="nm"].on{background:var(--indigo);border-color:var(--indigo)}
+  .tab[data-k="bn"].on{background:var(--rose);border-color:var(--rose)}
   .panel{display:none}
   .panel.on{display:block;animation:fade .25s ease}
   @keyframes fade{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
@@ -201,13 +203,21 @@
   .compare{background:linear-gradient(135deg,#1a1f36,#2d3561);color:#fff;border:none}
   .compare h2{color:#fff}
   .compare p{color:#c9d0e8}
-  .cmp3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(235px,1fr));margin-top:16px}
+  .cmp3{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));margin-top:16px}
   .cmp{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.17);border-radius:12px;padding:14px}
   .cmp .t{font-weight:800;font-size:1rem;margin-bottom:2px}
   .cmp .e{font-size:.85rem;color:#a9b4d8;margin-bottom:9px}
   .cmp svg{background:rgba(255,255,255,.05);border-radius:8px}
   .cmp .n{margin-top:9px;font-size:.9rem;color:#dfe4f5}
   .punch{margin-top:18px;background:rgba(255,255,255,.12);border-radius:11px;padding:15px 18px;font-size:1.03rem}
+  /* four generators */
+  .gen4{display:grid;gap:12px;grid-template-columns:1fr 1fr}
+  @media(max-width:760px){.gen4{grid-template-columns:1fr}}
+  .gen4 .g{background:#fafbff;border:1px solid var(--line);border-left:5px solid var(--c);border-radius:11px;padding:13px 15px}
+  .gen4 b{display:block;color:var(--c);font-size:.9rem;margin-bottom:7px}
+  .gen4 .g > code{font-size:.95rem;margin-bottom:8px}
+  .gen4 span{display:block;font-size:.88rem;color:var(--soft)}
+  .gen4 span code{font-size:.82rem;padding:2px 6px}
 </style>
 </head>
 <body>
@@ -215,8 +225,8 @@
 <header>
   <div class="inner">
     <span class="kicker">Week 8</span>
-    <h1>Three Distributions Explorer</h1>
-    <p>Continuous Uniform, Discrete Uniform and Normal — the pattern, the function behind it, the expected value, a sample you generate yourself, and finally the probabilities.</p>
+    <h1>Four Distributions Explorer</h1>
+    <p>Continuous Uniform, Discrete Uniform, Normal and Binomial — the pattern, the function behind it, the expected value, a sample you generate yourself, and finally the probabilities.</p>
   </div>
 </header>
 
@@ -239,7 +249,7 @@
     <div class="chain" style="margin-bottom:0">
       <div><b>Discrete variable</b><span>Separate, countable values (a die shows 1…6). The function is called the <strong>probability mass function</strong>. Each value carries its own chunk of probability.</span></div>
       <div><b>Continuous variable</b><span>Any value in a range (a price, a rainfall total). The function is called the <strong>probability density function</strong>. Probability is <strong>area under the curve</strong>, never the height itself.</span></div>
-      <div><b>Parameters</b><span>The one or two numbers that pin down which member of the family you have: <em>a</em> and <em>b</em>, or <em>μ</em> and <em>σ</em>.</span></div>
+      <div><b>Parameters</b><span>The one or two numbers that pin down which member of the family you have: <em>a</em> and <em>b</em>, <em>μ</em> and <em>σ</em>, or <em>n</em> and <em>p</em>.</span></div>
     </div>
   </div>
 
@@ -248,6 +258,7 @@
     <button class="tab on" data-k="cu">Continuous Uniform<small>Competitor's price, $6 to $10</small></button>
     <button class="tab" data-k="du">Discrete Uniform<small>Throwing a die</small></button>
     <button class="tab" data-k="nm">Normal<small>Price N(8, 2) · NOLA rainfall N(65, 15)</small></button>
+    <button class="tab" data-k="bn">Binomial<small>Survey of 20 people · p = 0.4</small></button>
   </div>
 
   <!-- ============ CONTINUOUS UNIFORM ============ -->
@@ -710,9 +721,264 @@
     </div>
   </section>
 
+  <!-- ============ BINOMIAL ============ -->
+  <section class="panel" id="p-bn" style="--accent:var(--rose);--accent-soft:var(--rose-soft)">
+
+    <div class="card step" data-n="1">
+      <h2>The pattern, in plain words</h2>
+      <div class="plain">Repeat the same yes/no trial n times and <em>count</em> how many times you get a "yes". The count is the random variable.</div>
+      <h3>Our example</h3>
+      <p>Assume <strong>40% of Americans agree</strong> with the statement <em>"Businesses have too much power over American life."</em>
+        You ask a random sample of <strong>20 people</strong>. Each person either agrees (a <strong>success</strong>) or does not.</p>
+      <p>The random variable is <strong>X = the number of people, out of the 20, who agree</strong>. It can be 0, 1, 2, … up to 20 — whole numbers only, so this is a <strong>discrete</strong> distribution, just like the die.</p>
+      <div class="chain" style="margin-top:8px">
+        <div><b>1 · Fixed number of trials</b><span>n = 20 people are asked. Each person is one trial.</span></div>
+        <div><b>2 · Two outcomes</b><span>Each person agrees (success) or does not (failure).</span></div>
+        <div><b>3 · Same p every time</b><span>Each person agrees with probability p = 0.4.</span></div>
+        <div><b>4 · Independent</b><span>One person's answer does not change another's.</span></div>
+      </div>
+      <span class="notation">X ~ Bin(n, p)&nbsp;&nbsp;→&nbsp;&nbsp;here X ~ Bin(20, 0.4)</span>
+    </div>
+
+    <div class="card step" data-n="2">
+      <h2>The function behind the pattern</h2>
+      <div class="fnbox">
+        <div class="fnhead">Probability mass function &nbsp;·&nbsp; f(x)</div>
+        <div class="fnbody">
+          <div class="fx">f(x) = <span class="frac"><span>n!</span><span class="den">x! (n − x)!</span></span>
+            p<sup>x</sup> (1 − p)<sup>n − x</sup>
+            &nbsp;&nbsp;<span style="font-size:.78em;color:var(--soft)">for x = 0, 1, …, n</span></div>
+          <div class="fnnote">
+            The fraction counts <b>how many ways</b> x successes can be arranged among n trials; the powers give the
+            <b>probability of one such arrangement</b>. Like the die, each bar height <b>is</b> a probability — a <b>mass</b> function.
+            You will not compute it by hand: Excel does it in Part 2.
+          </div>
+        </div>
+        <div class="ms">
+          <div><span>Parameters</span>n = number of trials, p = P(success)</div>
+          <div><span>Mean</span>n · p</div>
+          <div><span>St. dev.</span>√( n · p · (1 − p) )</div>
+        </div>
+      </div>
+      <div class="params">
+        <div><label>n — trials</label><input type="number" id="bn-tn" value="20" step="1" min="1" max="60"></div>
+        <div><label>p — P(success)</label><input type="number" id="bn-p" value="0.4" step="0.05" min="0" max="1"></div>
+        <div class="hint">Try p = 0.5: the bars become symmetric around n/2. Try p = 0.1: they pile up near 0. The bars always add up to 1.</div>
+      </div>
+      <div class="chartbox"><div class="cap">The mass function f(x) — bar heights are probabilities</div><svg id="bn-shape" viewBox="0 0 620 210"></svg></div>
+    </div>
+
+    <div class="card step" data-n="3">
+      <h2>Expected value</h2>
+      <div class="ev">
+        <div><div class="lab">Formula</div><div class="formula">E[X] = n · p</div></div>
+        <div><div class="lab">Here</div><div class="formula" id="bn-evwork">20 × 0.4</div></div>
+        <div><div class="lab">E[X]</div><div class="val" id="bn-ev">8.00</div></div>
+      </div>
+      <p style="margin-top:12px">Makes sense: if 40% of people agree, then in a group of 20 you expect about 40% of 20 = 8 to agree.</p>
+    </div>
+
+    <div class="card step" data-n="4">
+      <h2>Stop — answer this before you generate anything</h2>
+      <div class="pause">
+        <div class="q">If you survey 20 people, will exactly 8 of them always agree? So what does E[X] = 8 tell you?</div>
+        <textarea placeholder="Write your answer here first, then reveal..."></textarea>
+        <button class="btn ghost" style="margin-top:10px" data-reveal="bn-rev">Show the answer</button>
+        <div class="reveal" id="bn-rev">
+          <b>No.</b> One survey might give 6, the next 10, the next 8. X is random — that is the whole point.
+          <b>E[X] = 8 is the long-run average:</b> repeat the survey many times, average the counts, and you land near 8.
+          (Here 8 happens to be a possible value, unlike 3.5 for the die — but it is still not guaranteed.)
+        </div>
+      </div>
+    </div>
+
+    <div class="card step" data-n="5">
+      <h2>Check your understanding — before you generate</h2>
+      <p>Four quick questions. Click an answer to see the explanation.</p>
+      <div class="quiz" data-quiz="bn1" data-ans="0" style="margin-bottom:12px">
+        <div class="q">Q1. In this survey, what are the two parameters n and p?</div>
+        <button class="opt">n = 20 and p = 0.4</button>
+        <button class="opt">n = 0.4 and p = 20</button>
+        <button class="opt">n = 20 and p = 8</button>
+        <button class="opt">n = 8 and p = 0.4</button>
+        <div class="fb"></div>
+      </div>
+      <div class="quiz" data-quiz="bn2" data-ans="1" style="margin-bottom:12px">
+        <div class="q">Q2. What is the random variable X?</div>
+        <button class="opt">Whether one person agrees (yes or no).</button>
+        <button class="opt">The number of people, out of the 20, who agree.</button>
+        <button class="opt">The 40% of Americans who agree.</button>
+        <button class="opt">The 20 people in the survey.</button>
+        <div class="fb"></div>
+      </div>
+      <div class="quiz" data-quiz="bn3" data-ans="2" style="margin-bottom:12px">
+        <div class="q">Q3. You run the survey once and 9 of the 20 people agree. Then you repeat the survey 50 times, each time with 20 new people. What do you have now?</div>
+        <button class="opt">A sample of 20 values of X.</button>
+        <button class="opt">One value of X, equal to 50.</button>
+        <button class="opt">A sample of 50 values of X — one count (like the 9) from each survey.</button>
+        <button class="opt">1,000 values of X, one per person.</button>
+        <div class="fb"></div>
+      </div>
+      <div class="quiz" data-quiz="bn4" data-ans="0">
+        <div class="q">Q4. You average the 50 counts from Q3. The average should be close to…</div>
+        <button class="opt">8, because E[X] = n · p = 20 × 0.4.</button>
+        <button class="opt">0.4, because that is p.</button>
+        <button class="opt">20, because that is n.</button>
+        <button class="opt">50, because that is how many surveys you ran.</button>
+        <div class="fb"></div>
+      </div>
+    </div>
+
+    <div class="card step" data-n="6">
+      <h2>Generate 50 surveys of 20 people</h2>
+      <p>Each value below is <strong>one survey</strong>: the number of people, out of 20, who agreed. Fifty surveys give you a sample of <strong>50 values of X</strong>.</p>
+      <div class="btnrow">
+        <label for="bn-n">Number of surveys</label>
+        <input type="number" id="bn-n" value="50" min="1" max="5000">
+        <button class="btn" data-gen="bn">Generate sample</button>
+        <button class="btn ghost" data-add="bn">Add 50 more</button>
+        <button class="btn ghost" data-clear="bn">Clear</button>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="lab">Surveys</div><div class="num" id="bn-cnt">0</div></div>
+        <div class="stat hi"><div class="lab">Sample average</div><div class="num" id="bn-mean">—</div></div>
+        <div class="stat"><div class="lab">Expected value</div><div class="num" id="bn-ev2">8.00</div></div>
+        <div class="stat"><div class="lab">Difference</div><div class="num" id="bn-diff">—</div></div>
+      </div>
+      <div class="chips" id="bn-chips"><span class="empty">Your survey counts will appear here.</span></div>
+      <div class="chartbox"><div class="cap">Your sample (same scale as the mass function above)</div><svg id="bn-hist" viewBox="0 0 620 210"></svg></div>
+      <button class="btn ghost" data-copy="bn">Copy values for Excel</button>
+      <div class="excel" style="margin-top:16px">
+        <h3>The same thing in Excel</h3>
+        <ol>
+          <li><code>=BINOM.INV(20,0.4,RAND())</code> — one survey of 20 people: the number who agree. Drag down 50 rows for 50 surveys.</li>
+          <li><code>=AVERAGE()</code> of the 50 cells, under the column. Press <strong>F9</strong>: the average moves, but stays near 8.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card step" data-n="7">
+      <h2>Recap — one random value in Excel, for all four distributions</h2>
+      <p>Each formula gives <strong>one</strong> random value. Three of them use <code>RAND()</code>, a random number between 0 and 1, and turn it into a value from the distribution; <code>RANDBETWEEN</code> does it in one step. Write the formula once, then drag it down for a sample.</p>
+      <div class="gen4">
+        <div class="g" style="--c:var(--teal)"><b>Continuous Uniform · U(a, b)</b><code>=a+(b-a)*RAND()</code><span>Price U(6, 10): <code>=6+4*RAND()</code> — any number from 6 to 10.</span></div>
+        <div class="g" style="--c:var(--amber)"><b>Discrete Uniform · DU(a, b)</b><code>=RANDBETWEEN(a,b)</code><span>Die: <code>=RANDBETWEEN(1,6)</code> — a whole number from 1 to 6.</span></div>
+        <div class="g" style="--c:var(--indigo)"><b>Normal · N(μ, σ)</b><code>=NORM.INV(RAND(),μ,σ)</code><span>Price N(8, 2): <code>=NORM.INV(RAND(),8,2)</code> — most values near 8.</span></div>
+        <div class="g" style="--c:var(--rose)"><b>Binomial · Bin(n, p)</b><code>=BINOM.INV(n,p,RAND())</code><span>Survey Bin(20, 0.4): <code>=BINOM.INV(20,0.4,RAND())</code> — a count from 0 to 20.</span></div>
+      </div>
+      <p style="margin:12px 0 0;font-size:.93rem;color:var(--soft)">Watch the order: for the Normal, <code>RAND()</code> comes <b>first</b>; for the Binomial it comes <b>last</b>.</p>
+    </div>
+
+    <div class="divider"><span>Part 2 · Now compute a probability</span></div>
+
+    <div class="card step" data-n="8">
+      <h2>Probability = <em>add up the bars</em> — Excel does the adding</h2>
+      <p>Same idea as the die: each bar <strong>is</strong> a probability, so you add the bars you care about. The bars are no longer all the same height, so we let Excel compute them with one function.</p>
+      <div class="fnbox" style="margin-bottom:14px">
+        <div class="fnhead">The one function you need</div>
+        <div class="fnbody">
+          <div class="fx" style="font-family:Consolas,monospace;font-size:1.05rem;color:#9d1d1d">
+            =BINOM.DIST(x, n, p, cumulative)
+          </div>
+          <div class="fnnote">
+            <b>FALSE</b> → one bar: P(X = x).<br>
+            <b>TRUE</b> → all bars from 0 up to x: P(X ≤ x).
+          </div>
+        </div>
+      </div>
+      <div style="overflow:auto">
+      <table class="cumtable" style="margin-bottom:16px">
+        <tr><th>The question says…</th><th>In symbols</th><th>Excel (n = 20, p = 0.4)</th></tr>
+        <tr><td>exactly 8</td><td>P(X = 8)</td><td><code>=BINOM.DIST(8,20,0.4,FALSE)</code></td></tr>
+        <tr><td><b>at most 7</b> / no more than 7</td><td>P(X ≤ 7)</td><td><code>=BINOM.DIST(7,20,0.4,TRUE)</code></td></tr>
+        <tr><td>fewer than 7</td><td>P(X ≤ 6)</td><td><code>=BINOM.DIST(6,20,0.4,TRUE)</code></td></tr>
+        <tr><td>at least 5</td><td>P(X ≥ 5) = 1 − P(X ≤ 4)</td><td><code>=1-BINOM.DIST(4,20,0.4,TRUE)</code></td></tr>
+        <tr><td>more than 5</td><td>P(X ≥ 6) = 1 − P(X ≤ 5)</td><td><code>=1-BINOM.DIST(5,20,0.4,TRUE)</code></td></tr>
+        <tr><td>between 6 and 10 (inclusive)</td><td>P(X ≤ 10) − P(X ≤ 5)</td><td><code>=BINOM.DIST(10,20,0.4,TRUE)-BINOM.DIST(5,20,0.4,TRUE)</code></td></tr>
+      </table>
+      </div>
+      <p style="font-size:.95rem"><strong>Careful with the edges.</strong> For a discrete variable, P(X ≤ 7) and P(X &lt; 7) are <em>different</em> — the bar at 7 is either in or out. (For the uniform price and the Normal it made no difference, because a single point had zero area.)</p>
+      <div class="presets">
+        <button class="btn ghost sm" data-pre="bn|lt|7|">P(X ≤ 7)</button>
+        <button class="btn ghost sm" data-pre="bn|eq|8|">P(X = 8)</button>
+        <button class="btn ghost sm" data-pre="bn|gt|5|">P(X ≥ 5)</button>
+        <button class="btn ghost sm" data-pre="bn|bt|6|10">P(6 ≤ X ≤ 10)</button>
+      </div>
+      <div class="pq">
+        <div><label>Question</label>
+          <select id="bn-mode">
+            <option value="eq">P(X = value)</option>
+            <option value="lt" selected>P(X ≤ value)</option>
+            <option value="gt">P(X ≥ value)</option>
+            <option value="bt">P(low ≤ X ≤ high)</option>
+          </select>
+        </div>
+        <div><label id="bn-l1">Value</label><input type="number" id="bn-v1" value="7" step="1"></div>
+        <div id="bn-w2" style="display:none"><label>High</label><input type="number" id="bn-v2" value="10" step="1"></div>
+      </div>
+      <div class="answerbox">
+        <div class="lab">Worked out</div>
+        <div class="work" id="bn-work"></div>
+        <div class="big" id="bn-prob">—</div>
+        <div class="exl" id="bn-exl"></div>
+      </div>
+      <div class="chartbox"><div class="cap">The highlighted bars add up to the probability</div><svg id="bn-parea" viewBox="0 0 620 210"></svg></div>
+      <h3>The cumulative probability, bar by bar</h3>
+      <p style="font-size:.95rem">This is exactly what <code>BINOM.DIST(x, n, p, TRUE)</code> returns for each x. The last entry must be 1.</p>
+      <div style="overflow:auto"><table class="cumtable" id="bn-cum"></table></div>
+    </div>
+
+    <div class="card step" data-n="9">
+      <h2>Your turn — the survey question</h2>
+      <div class="plain" style="font-weight:500">
+        Assume that you believe that <b>40%</b> of Americans agree with the proposition: <em>"Businesses have too much power over American life."</em>
+        If you take a random sample of <b>20 people</b>, what is the probability that <b>at most 7</b> of the people believe business has too much power in American life?
+        Write down the Excel formula that you need.
+      </div>
+      <div class="grid2" style="margin-top:14px">
+        <div class="excel"><h3>Step 1 · Name the distribution</h3>
+          <p style="margin:0">X = number of people, out of 20, who agree.<br>Each person agrees with p = 0.4, so <b>X ~ Bin(n = 20, p = 0.4)</b>.</p></div>
+        <div class="excel"><h3>Step 2 · Translate the words</h3>
+          <p style="margin:0">"At most 7" means 7 <b>or fewer</b>: 0, 1, 2, …, 7.<br>So we want <b>P(X ≤ 7)</b> — the bars from 0 to 7, including 7.</p></div>
+        <div class="excel"><h3>Step 3 · The Excel formula</h3>
+          <p style="margin:0 0 7px">"Up to and including x" is exactly what TRUE does:</p>
+          <code>=BINOM.DIST(7,20,0.4,TRUE)</code></div>
+        <div class="excel" style="background:#fff8ec;border-color:#f0d9ae;border-left-color:#c2680a">
+          <h3 style="color:#c2680a">Step 4 · The answer</h3>
+          <p style="margin:0">P(X ≤ 7) = <b style="font-size:1.25rem">0.4159</b></p>
+          <p style="margin:6px 0 0;font-size:.92rem">About a <b>42%</b> chance that 7 or fewer of the 20 agree — even though we expect 8.</p></div>
+      </div>
+      <h3>Try two more</h3>
+      <div class="grid2">
+        <div class="excel"><h3>Exactly 8 agree?</h3>
+          <p style="margin:0 0 7px;font-family:'Cambria Math',Georgia,serif">P(X = 8)</p>
+          <code>=BINOM.DIST(8,20,0.4,FALSE)</code></div>
+        <div class="excel"><h3>At least 5 agree?</h3>
+          <p style="margin:0 0 7px;font-family:'Cambria Math',Georgia,serif">P(X ≥ 5) = 1 − P(X ≤ 4)</p>
+          <code>=1-BINOM.DIST(4,20,0.4,TRUE)</code></div>
+      </div>
+      <div style="margin-top:12px">
+        <button class="btn ghost sm" data-reveal="bn-try">Show the answer</button>
+        <div class="reveal" id="bn-try">
+          P(X = 8) = <b>0.1797</b> — even the single most likely count happens less than 1 time in 5.<br>
+          P(X ≥ 5) = <b>0.9490</b> — "at least 5" includes 5, so we subtract P(X ≤ <b>4</b>), not P(X ≤ 5).
+        </div>
+      </div>
+    </div>
+
+    <div class="card quiz" data-quiz="bn" data-ans="1">
+      <div class="q">In Excel, <code style="color:#9d1d1d">=BINOM.DIST(7,20,0.4,TRUE)</code> returns 0.4159. What is that number?</div>
+      <button class="opt">P(X = 7), the probability that exactly 7 agree.</button>
+      <button class="opt">P(X ≤ 7), the probability that 7 or fewer agree.</button>
+      <button class="opt">P(X &lt; 7), the probability that fewer than 7 agree.</button>
+      <button class="opt">P(X ≥ 7), the probability that 7 or more agree.</button>
+      <div class="fb"></div>
+    </div>
+  </section>
+
   <!-- ============ COMPARE ============ -->
   <div class="card compare">
-    <h2>All three side by side</h2>
+    <h2>All four side by side</h2>
     <p>Same recipe every time: a function, one or two parameters, a shape, a balance point, and a way to get probability out of it.</p>
     <div class="cmp3">
       <div class="cmp"><div class="t">Continuous Uniform</div><div class="e">X ~ U(6, 10) · density</div>
@@ -724,21 +990,26 @@
       <div class="cmp"><div class="t">Normal</div><div class="e">X ~ N(8, 2) · density</div>
         <svg id="c3" viewBox="0 0 260 110"></svg>
         <div class="n">E[X] = 8 · probability = area, and Excel computes it with NORM.DIST</div></div>
+      <div class="cmp"><div class="t">Binomial</div><div class="e">X ~ Bin(20, 0.4) · mass</div>
+        <svg id="c4" viewBox="0 0 260 110"></svg>
+        <div class="n">E[X] = n·p = 8 · probability = add up the bars, and Excel computes it with BINOM.DIST</div></div>
     </div>
     <div class="punch">
-      The first and the third have the <strong>same expected value of 8</strong> — and look nothing alike.
+      The uniform price, the normal price and the binomial survey all have the <strong>same expected value of 8</strong> — and look nothing alike.
       The expected value marks the center. The <strong>distribution</strong> is what tells you the whole story.
     </div>
   </div>
 
   <div class="card">
     <h2>Before you leave class</h2>
-    <p>Open your Probability Template, rebuild all three columns, and put <code>=AVERAGE()</code> under each one:</p>
+    <p>Open your Probability Template, rebuild all four columns, and put <code>=AVERAGE()</code> under each one:</p>
     <div class="grid2">
       <div><p style="margin:0 0 6px"><strong>continuous Uniform tab</strong></p><code>=$E$2+($E$3-$E$2)*RAND()</code></div>
       <div><p style="margin:0 0 6px"><strong>Discrete Uniform tab</strong></p><code>=RANDBETWEEN(1,6)</code></div>
       <div><p style="margin:0 0 6px"><strong>Normal tab</strong></p><code>=NORM.INV(RAND(),$H$3,$H$4)</code></div>
       <div><p style="margin:0 0 6px"><strong>Probabilities on the Normal tab</strong></p><code>=NORM.DIST(x,$H$3,$H$4,TRUE)</code></div>
+      <div><p style="margin:0 0 6px"><strong>Binomial tab</strong></p><code>=BINOM.INV(20,0.4,RAND())</code></div>
+      <div><p style="margin:0 0 6px"><strong>Probabilities on the Binomial tab</strong></p><code>=BINOM.DIST(x,20,0.4,TRUE)</code> &nbsp;(FALSE for exactly x)</div>
     </div>
     <p style="margin-top:14px">Then answer in one sentence each: <em>why does the average keep changing when you press F9, and why does it keep landing close to the expected value?</em></p>
   </div>
@@ -782,7 +1053,27 @@
     nm:["The height is what you get with FALSE, not TRUE — and height is not a probability.",
         "Correct. TRUE gives the cumulative area to the left of x. To get P(X > 10) you would use 1 − 0.8413 = 0.1587.",
         "For a continuous variable the probability of exactly one value is 0.",
-        "That is 1 − 0.8413 = 0.1587. TRUE always returns the LEFT area."]
+        "That is 1 − 0.8413 = 0.1587. TRUE always returns the LEFT area."],
+    bn1:["n = 20 people (trials) and p = 0.4 (the chance that one person agrees).",
+         "Reversed. n is a count of trials (a whole number); p is a probability between 0 and 1.",
+         "8 is E[X] = n·p, the expected count — not a parameter. p is the chance one person agrees: 0.4.",
+         "8 is the expected count, not the number of trials. Twenty people are asked, so n = 20."],
+    bn2:["That is one trial (one person). The binomial X counts the successes across all 20 trials.",
+         "X is a count: how many of the 20 agree. It can be any whole number from 0 to 20.",
+         "40% is p, a fixed parameter. X is the count you observe in your survey, and it changes from survey to survey.",
+         "The 20 people are the trials (n). X is how many of them agree."],
+    bn3:["Twenty is the number of people in ONE survey. Each survey produces just one value of X.",
+         "50 is the number of surveys, not a value of X. X can never be more than 20.",
+         "One survey of 20 people = one value of X (like the 9). Fifty surveys = a sample of 50 values.",
+         "You recorded one count per survey, not one answer per person. The sample is the 50 counts."],
+    bn4:["The average of many values of X settles near E[X] = n·p = 8.",
+         "0.4 is the probability that one person agrees. The values of X are counts out of 20, so their average is near 8.",
+         "20 would mean everyone agrees in every survey. The average count is n·p, not n.",
+         "50 is the number of surveys. It changes how close the average gets to 8, not where it lands."],
+    bn:["That is =BINOM.DIST(7,20,0.4,FALSE) = 0.1659, a single bar.",
+        "TRUE adds up the bars from 0 to 7, including 7. That is \"at most 7\".",
+        "Fewer than 7 means X ≤ 6: =BINOM.DIST(6,20,0.4,TRUE) = 0.2500. The bar at 7 matters here.",
+        "That would be 1 − P(X ≤ 6) = 0.7500. TRUE always counts from 0 upward."]
   };
   document.querySelectorAll('.quiz').forEach(function(q){
     var ans=parseInt(q.dataset.ans,10), key=q.dataset.quiz;
@@ -793,7 +1084,8 @@
         opts[ans].classList.add('right');
         if(i!==ans) o.classList.add('wrong');
         fb.className='fb on '+(i===ans?'good':'bad');
-        fb.innerHTML='<strong>'+(i===ans?'Correct. ':'Not quite. ')+'</strong>'+FB[key][i];
+        var msg=FB[key][i]; if(i===ans) msg=msg.replace(/^Correct\.\s*/,'');
+        fb.innerHTML='<strong>'+(i===ans?'Correct. ':'Not quite. ')+'</strong>'+msg;
       });
     });
   });
@@ -844,26 +1136,37 @@
   }
 
   /* ---------- config ---------- */
-  var S={cu:[],du:[],nm:[]};
-  var COLOR={cu:'#0d9488',du:'#c2680a',nm:'#4f46e5'};
+  var S={cu:[],du:[],nm:[],bn:[]};
+  var COLOR={cu:'#0d9488',du:'#c2680a',nm:'#4f46e5',bn:'#be185d'};
+  function bpmf(x,n,p){
+    if(x<0||x>n) return 0;
+    if(p<=0) return x===0?1:0; if(p>=1) return x===n?1:0;
+    var c=0,i; for(i=1;i<=x;i++) c+=Math.log(n-x+i)-Math.log(i);
+    return Math.exp(c+x*Math.log(p)+(n-x)*Math.log(1-p));
+  }
+  function bcdf(x,n,p){ var s=0,i; for(i=0;i<=Math.min(x,n);i++) s+=bpmf(i,n,p); return Math.min(1,s); }
 
   function params(k){
     if(k==='cu'){ var a=num('cu-a'),b=num('cu-b'); if(b<=a) b=a+1; return {a:a,b:b}; }
     if(k==='du'){ var a2=Math.round(num('du-a')),b2=Math.round(num('du-b'));
       if(b2<a2) b2=a2; if(b2-a2>40) b2=a2+40; return {a:a2,b:b2,n:b2-a2+1}; }
+    if(k==='bn'){ var tn=Math.round(num('bn-tn')),pp=num('bn-p');
+      if(tn<1) tn=1; if(tn>60) tn=60; if(pp<0) pp=0; if(pp>1) pp=1; return {n:tn,p:pp}; }
     var m=num('nm-m'),s=num('nm-s'); if(s<=0) s=0.1; return {m:m,s:s};
   }
-  function expected(k){ var p=params(k); return k==='nm'?p.m:(p.a+p.b)/2; }
+  function expected(k){ var p=params(k); if(k==='bn') return p.n*p.p; return k==='nm'?p.m:(p.a+p.b)/2; }
   function domain(k){
     var p=params(k);
     if(k==='cu'){ var pad=(p.b-p.a)*0.18; return [p.a-pad,p.b+pad]; }
     if(k==='du') return [p.a-0.7,p.b+0.7];
+    if(k==='bn') return [-0.7,p.n+0.7];
     return [p.m-4*p.s,p.m+4*p.s];
   }
   function drawValue(k){
     var p=params(k);
     if(k==='cu') return p.a+(p.b-p.a)*Math.random();
     if(k==='du') return p.a+Math.floor(Math.random()*p.n);
+    if(k==='bn'){ var c=0,i; for(i=0;i<p.n;i++) if(Math.random()<p.p) c++; return c; }
     var u=0,v=0; while(u===0)u=Math.random(); while(v===0)v=Math.random();
     return p.m+p.s*Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v);
   }
@@ -872,7 +1175,20 @@
   function paintShape(svg,k,shade){
     clear(svg);
     var p=params(k), dom=domain(k), c=COLOR[k];
-    ylabel(svg,k==='du'?'probability f(x)':'density f(x)');
+    ylabel(svg,(k==='du'||k==='bn')?'probability f(x)':'density f(x)');
+    if(k==='bn'){
+      var mxp=0,jj; for(jj=0;jj<=p.n;jj++) mxp=Math.max(mxp,bpmf(jj,p.n,p.p));
+      var bwb=Math.min(26,(sx(1,dom)-sx(0,dom))*0.7);
+      for(jj=0;jj<=p.n;jj++){
+        var pv=bpmf(jj,p.n,p.p), xb=sx(jj,dom), yb=sy(pv,mxp*1.25);
+        var onb=shade?(jj>=shade[0]&&jj<=shade[1]):true;
+        svg.appendChild(el('rect',{x:xb-bwb/2,y:yb,width:bwb,height:Math.max(0,(H-PB)-yb),
+          fill:c,opacity:onb?.82:.16,rx:2}));
+      }
+      var tkb=[]; for(jj=0;jj<=p.n;jj++) if(p.n<=20||jj%Math.ceil(p.n/12)===0) tkb.push(jj);
+      axis(svg,dom,tkb);
+      return;
+    }
 
     if(k==='cu'){
       var top=sy(1,1.35);
@@ -947,7 +1263,18 @@
       t.textContent='Generate a sample to see it here'; svg.appendChild(t);
       axis(svg,dom,ticksOf(dom[0],dom[1],6)); return;
     }
-    if(k==='du'){
+    if(k==='bn'){
+      var bb=[]; for(i=0;i<=p.n;i++) bb.push(0);
+      data.forEach(function(v){ if(v>=0&&v<=p.n) bb[v]++; });
+      var mb=Math.max.apply(null,bb)||1, bwh=Math.min(26,(sx(1,dom)-sx(0,dom))*0.7);
+      bb.forEach(function(ct,ii){
+        if(!ct) return;
+        var x=sx(ii,dom), y=sy(ct,mb*1.3);
+        svg.appendChild(el('rect',{x:x-bwh/2,y:y,width:bwh,height:(H-PB)-y,fill:c,opacity:.8,rx:2}));
+      });
+      var tkh=[]; for(i=0;i<=p.n;i++) if(p.n<=20||i%Math.ceil(p.n/12)===0) tkh.push(i);
+      axis(svg,dom,tkh);
+    } else if(k==='du'){
       var bins=[]; for(i=0;i<p.n;i++) bins.push(0);
       data.forEach(function(v){ var idx=Math.round(v)-p.a; if(idx>=0&&idx<bins.length) bins[idx]++; });
       var mx=Math.max.apply(null,bins)||1, barw=(sx(p.a+1,dom)-sx(p.a,dom))*0.6;
@@ -978,7 +1305,8 @@
   function probBounds(k){
     var mode=document.getElementById(k+'-mode').value;
     var v1=num(k+'-v1'), v2=num(k+'-v2'), p=params(k);
-    var far = (k==='nm') ? [p.m-9*p.s,p.m+9*p.s] : (k==='cu'? [p.a,p.b] : [p.a,p.b]);
+    var far = (k==='nm') ? [p.m-9*p.s,p.m+9*p.s] : (k==='bn'? [0,p.n] : [p.a,p.b]);
+    if(mode==='eq') return {mode:mode,lo:v1,hi:v1,v1:v1,v2:v2};
     if(mode==='lt') return {mode:mode,lo:far[0],hi:v1,v1:v1,v2:v2};
     if(mode==='gt') return {mode:mode,lo:v1,hi:far[1],v1:v1,v2:v2};
     return {mode:mode,lo:Math.min(v1,v2),hi:Math.max(v1,v2),v1:Math.min(v1,v2),v2:Math.max(v1,v2)};
@@ -1006,6 +1334,23 @@
       work=head2+' = '+(cnt?new Array(cnt+1).join('1/'+p.n+' + ').slice(0,-3):'0')+' = '+cnt+'/'+p.n;
       exl='Count how many bars are highlighted, then divide by n = '+p.n+'. Nothing but addition.';
     }
+    else if(k==='bn'){
+      var lo3=Math.max(0,Math.ceil(b.lo)), hi3=Math.min(p.n,Math.floor(b.hi)), q, ex=p.n+','+p.p;
+      prob=0; for(q=lo3;q<=hi3;q++) prob+=bpmf(q,p.n,p.p);
+      if(m==='eq'){
+        work='P(X = '+b.v1+') = one bar = '+p.n+'! / ('+b.v1+'! · '+(p.n-b.v1)+'!) · '+p.p+'^'+b.v1+' · '+fmt(1-p.p,2).replace(/0$/,'')+'^'+(p.n-b.v1);
+        exl='Excel formula: =BINOM.DIST('+b.v1+','+ex+',FALSE)   — FALSE gives one bar.';
+      } else if(m==='lt'){
+        work='P(X ≤ '+b.v1+') = f(0) + f(1) + … + f('+b.v1+')';
+        exl='Excel formula: =BINOM.DIST('+b.v1+','+ex+',TRUE)   — TRUE adds every bar from 0 up to '+b.v1+'.';
+      } else if(m==='gt'){
+        work='P(X ≥ '+b.v1+') = 1 − P(X ≤ '+(b.v1-1)+') = 1 − '+fmt(bcdf(b.v1-1,p.n,p.p),4);
+        exl='Excel formula: =1-BINOM.DIST('+(b.v1-1)+','+ex+',TRUE)   — note the '+(b.v1-1)+': the bar at '+b.v1+' must stay in.';
+      } else {
+        work='P('+b.v1+' ≤ X ≤ '+b.v2+') = P(X ≤ '+b.v2+') − P(X ≤ '+(b.v1-1)+') = '+fmt(bcdf(b.v2,p.n,p.p),4)+' − '+fmt(bcdf(b.v1-1,p.n,p.p),4);
+        exl='Excel formula: =BINOM.DIST('+b.v2+','+ex+',TRUE)-BINOM.DIST('+(b.v1-1)+','+ex+',TRUE)';
+      }
+    }
     else{
       var L=ncdf(b.lo,p.m,p.s), Hh=ncdf(b.hi,p.m,p.s);
       prob=Math.max(0,Hh-L);
@@ -1028,7 +1373,7 @@
     var svg=document.getElementById(k+'-parea');
     paintShape(svg,k,[b.lo,b.hi]);
     var dom=domain(k);
-    if(k!=='du'){
+    if(k!=='du'&&k!=='bn'){
       if(m!=='gt') vline(svg,sx(Math.min(b.hi,dom[1]),dom),null,COLOR[k],{solid:true});
       if(m!=='lt') vline(svg,sx(Math.max(b.lo,dom[0]),dom),null,COLOR[k],{solid:true});
     }
@@ -1051,6 +1396,17 @@
     t.innerHTML=h;
   }
 
+  function cumTableBn(){
+    var p=params('bn'), t=document.getElementById('bn-cum'), i, run=0;
+    var h='<tr><th>Value x</th><th>f(x) = P(X = x)<br><small>BINOM.DIST(x,'+p.n+','+p.p+',FALSE)</small></th><th>Cumulative P(X ≤ x)<br><small>BINOM.DIST(x,'+p.n+','+p.p+',TRUE)</small></th></tr>';
+    for(i=0;i<=Math.min(p.n,30);i++){
+      var f=bpmf(i,p.n,p.p); run+=f;
+      h+='<tr><td><b>'+i+'</b></td><td>'+f.toFixed(4)+'</td><td>'+Math.min(1,run).toFixed(4)+'</td></tr>';
+    }
+    if(p.n>30) h+='<tr><td colspan="3" style="color:#6b7490;font-style:italic">… showing x = 0 to 30</td></tr>';
+    t.innerHTML=h;
+  }
+
   /* ---------- refresh ---------- */
   function refresh(k){
     var ev=expected(k), p=params(k);
@@ -1059,6 +1415,7 @@
     if(k==='cu') document.getElementById('cu-evwork').textContent='('+p.a+' + '+p.b+') / 2';
     if(k==='du') document.getElementById('du-evwork').textContent='('+p.a+' + '+p.b+') / 2';
     if(k==='nm') document.getElementById('nm-evwork').textContent='μ = '+p.m;
+    if(k==='bn') document.getElementById('bn-evwork').textContent=p.n+' × '+p.p;
 
     var d=S[k];
     document.getElementById(k+'-cnt').textContent=d.length;
@@ -1072,7 +1429,7 @@
     var box=document.getElementById(k+'-chips'); box.innerHTML='';
     if(!d.length){ box.innerHTML='<span class="empty">Your values will appear here.</span>'; }
     else{
-      var dec=(k==='du')?0:2;
+      var dec=(k==='du'||k==='bn')?0:2;
       d.slice(0,60).forEach(function(v){
         var s=document.createElement('span'); s.className='chip'; s.textContent=fmt(v,dec); box.appendChild(s);
       });
@@ -1083,6 +1440,7 @@
     }
     drawShape(k); drawHist(k); updateProb(k);
     if(k==='du') cumTable();
+    if(k==='bn') cumTableBn();
   }
 
   /* ---------- events ---------- */
@@ -1110,7 +1468,7 @@
       var k=b.dataset.copy, d=S[k];
       if(!d.length){ b.textContent='Generate a sample first';
         setTimeout(function(){b.textContent='Copy values for Excel';},1600); return; }
-      var txt=d.map(function(v){ return (k==='du')?String(Math.round(v)):v.toFixed(4); }).join('\n');
+      var txt=d.map(function(v){ return (k==='du'||k==='bn')?String(Math.round(v)):v.toFixed(4); }).join('\n');
       var done=function(){ b.textContent='Copied — paste into a column';
         setTimeout(function(){b.textContent='Copy values for Excel';},1900); };
       if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(txt).then(done,done);
@@ -1120,10 +1478,10 @@
       }
     });
   });
-  ['cu-a','cu-b','du-a','du-b','nm-m','nm-s'].forEach(function(id){
+  ['cu-a','cu-b','du-a','du-b','nm-m','nm-s','bn-tn','bn-p'].forEach(function(id){
     document.getElementById(id).addEventListener('input',function(){ refresh(id.split('-')[0]); });
   });
-  ['cu','du','nm'].forEach(function(k){
+  ['cu','du','nm','bn'].forEach(function(k){
     ['-mode','-v1','-v2'].forEach(function(sfx){
       document.getElementById(k+sfx).addEventListener('input',function(){ updateProb(k); });
       document.getElementById(k+sfx).addEventListener('change',function(){ updateProb(k); });
@@ -1156,6 +1514,13 @@
         var x=mx(i,0.3,6.7), bw=(w-pl-pr)/6*0.55, top2=pt+16;
         svg.appendChild(el('rect',{x:x-bw/2,y:top2,width:bw,height:(h-pb)-top2,fill:'#fbbf24',opacity:.8,rx:2}));
       }
+    } else if(kind==='b'){
+      var mpb=bpmf(8,20,0.4);
+      for(i=0;i<=20;i++){
+        var xb2=mx(i,-0.7,20.7), bw2=(w-pl-pr)/21*0.65, hb=bpmf(i,20,0.4)/mpb*(h-pb-pt-8);
+        if(hb<0.5) continue;
+        svg.appendChild(el('rect',{x:xb2-bw2/2,y:(h-pb)-hb,width:bw2,height:hb,fill:'#f9a8d4',opacity:.85,rx:1.5}));
+      }
     } else {
       var pts=[];
       for(i=0;i<=120;i++){
@@ -1166,12 +1531,12 @@
         fill:'#a5b4fc',opacity:.3}));
       svg.appendChild(el('polyline',{points:pts.join(' '),fill:'none',stroke:'#a5b4fc','stroke-width':2.5}));
     }
-    var evx=(kind==='d')?mx(3.5,0.3,6.7):(kind==='u'?mx(8,5,11):mx(8,0,16));
+    var evx=(kind==='d')?mx(3.5,0.3,6.7):(kind==='u'?mx(8,5,11):(kind==='b'?mx(8,-0.7,20.7):mx(8,0,16)));
     svg.appendChild(el('line',{x1:evx,y1:pt-2,x2:evx,y2:h-pb,stroke:'#fff','stroke-width':2,'stroke-dasharray':'5 3'}));
   }
 
-  ['cu','du','nm'].forEach(refresh);
-  mini('c1','u'); mini('c2','d'); mini('c3','n');
+  ['cu','du','nm','bn'].forEach(refresh);
+  mini('c1','u'); mini('c2','d'); mini('c3','n'); mini('c4','b');
 })();
 </script>
 </body>
